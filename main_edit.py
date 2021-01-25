@@ -1,7 +1,8 @@
 import moviepy.editor as mvpy
 import os
 
-from settings import VIDEO_SCENARIOS as scs
+from settings import VIDEO_SCENARIOS as v_sets
+from settings import TEXT_SCENARIOS as t_sets
 
 
 def edit_video(loadtitle, savetitle, cuts):
@@ -43,18 +44,18 @@ def edit_text(text, mark):
     :return: TextClip
     """
     text = mvpy.TextClip(text,
-                         font=scs[mark]['font'],
-                         fontsize=scs[mark]['fontsize'],
-                         color=scs[mark]['color'],
-                         # bg_color=scs[mark]['bg_clr']
+                         font=t_sets[mark]['font'],
+                         fontsize=t_sets[mark]['fontsize'],
+                         color=t_sets[mark]['color'],
+                         # bg_color=t_sets[mark]['bg_clr']
                          )
 
-    text = text.set_position(scs[mark]['pos'])
-    text = text.set_start(scs[mark]['start'])
-    text = text.set_end(scs[mark]['end'])
+    text = text.set_position(t_sets[mark]['pos'])
+    text = text.set_start(t_sets[mark]['start'])
+    text = text.set_end(t_sets[mark]['end'])
     text = text.set_duration(4)
-    text = text.crossfadein(scs[mark]['fadein'])
-    text = text.crossfadein(scs[mark]['fadeout'])
+    text = text.crossfadein(t_sets[mark]['fadein'])
+    text = text.crossfadein(t_sets[mark]['fadeout'])
 
     return text
 
@@ -74,16 +75,16 @@ def save_video(clip, savetitle, path='media/save'):
     os.makedirs(path, exist_ok=True)
 
     clip.write_videofile(savetitle, threads=4, fps=24,
-                         codec=scs['sets']['vcodec'],
-                         preset=scs['sets']['compression'],
-                         ffmpeg_params=["-crf", scs['sets']['vquality']])
+                         codec=v_sets['sets']['vcodec'],
+                         preset=v_sets['sets']['compression'],
+                         ffmpeg_params=["-crf", v_sets['sets']['vquality']])
 
 
 if __name__ == '__main__':
-    title_open = scs['sets']['dir_load'] + 'IMG_0039'
-    title_save = scs['sets']['dir_save'] + 'IMG_0039'
-    loadtitle = title_open + scs['sets']['load_ext']
-    savetitle = title_save + scs['sets']['save_ext']
+    title_open = v_sets['sets']['dir_load'] + 'IMG_0039'
+    title_save = v_sets['sets']['dir_save'] + 'IMG_0039'
+    loadtitle = title_open + v_sets['sets']['load_ext']
+    savetitle = title_save + v_sets['sets']['save_ext']
 
     cuts = [('00:00:00.00', '00:00:04.00'),
             ('00:00:14.00', '00:00:20.00')]

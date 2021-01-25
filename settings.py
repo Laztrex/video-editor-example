@@ -8,7 +8,9 @@ VIDEO_SCENARIOS = {
         'load_ext': ".mov",
         'save_ext': '.mp4',
     },
+}
 
+TEXT_SCENARIOS = {
     'text_1': {
         'font': 'Courier',
         'fontsize': 120,
