@@ -1,11 +1,7 @@
 import os
-from moviepy import Clip
+
 import moviepy.editor as mvpy
-from moviepy.audio.io.AudioFileClip import AudioFileClip
-from moviepy.decorators import convert_to_seconds
-from moviepy.video.io.ffmpeg_reader import FFMPEG_VideoReader
 from moviepy.video.tools.tracking import Trajectory
-from moviepy.video.VideoClip import VideoClip
 from moviepy.video.tools.drawing import blit
 
 import numpy as np
@@ -120,15 +116,11 @@ def edit_text(text, mark):
                      color=t_sets[mark]['color'],
                      # bg_color=t_sets[mark]['bg_clr']
                      )
-    if mark == 'text_1':
-        traj1 = Trajectory.load_list('track.txt')
-        for i in traj1:
-            text = text.set_position(i)
-    else:
-        traj2 = Trajectory.load_list('track2.txt')
-        for i in traj2:
-            text = text.set_position(i)
-        # text = text.set_position(t_sets[mark]['pos'])
+
+    traj = Trajectory.load_list(t_sets[mark]['tracking'])
+    for i in traj:
+        text = text.set_position(i)
+
     text = text.set_start(t_sets[mark]['start'])
     text = text.set_end(t_sets[mark]['end'])
     text = text.crossfadein(t_sets[mark]['fadein'])
