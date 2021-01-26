@@ -10,7 +10,10 @@ from settings import VIDEO_SCENARIOS as v_sets
 from settings import TEXT_SCENARIOS as t_sets
 
 
-def new_func(self, picture, t):
+def fix_problem_pos_mlt_clips(self, picture, t):
+    """
+    Временное решение проблемы Multiple ImageClips
+    """
     hf, wf = framesize = picture.shape[:2]
 
     if self.ismask and picture.max():
@@ -63,22 +66,17 @@ def new_func(self, picture, t):
 
 
 class TrickyBugImg(mvpy.ImageClip):
-    """
-    Временное решение проблемы Multiple ImageClips
-    """
+
     def blit_on(self, picture, t):
         """
         Returns the result of the blit of the clip's frame at time `t`
         on the given `picture`, the position of the clip being given
         by the clip's ``pos`` attribute. Meant for compositing.
         """
-        return new_func(self, picture, t)
+        return fix_problem_pos_mlt_clips(self, picture, t)
 
 
 class TrickyBugText(mvpy.TextClip):
-    """
-    Временное решение проблемы Multiple TextClips
-    """
 
     def blit_on(self, picture, t):
         """
@@ -86,7 +84,7 @@ class TrickyBugText(mvpy.TextClip):
         on the given `picture`, the position of the clip being given
         by the clip's ``pos`` attribute. Meant for compositing.
         """
-        return new_func(self, picture, t)
+        return fix_problem_pos_mlt_clips(self, picture, t)
 
 
 def edit_video(loadtitle, savetitle, cuts):
@@ -131,7 +129,7 @@ def add_img(img, mark):
     logo = logo.set_start(t_sets[mark]['start'])
     logo = logo.set_end(t_sets[mark]['end'])
     logo = logo.crossfadein(t_sets[mark]['fadein'])
-    logo = logo.crossfadein(t_sets[mark]['fadeout'])
+    # logo = logo.crossfadein(t_sets[mark]['fadeout'])
 
     return logo
 
@@ -146,11 +144,11 @@ def edit_text(text, mark):
     :return: TextClip
     """
     text = TrickyBugText(text,
-                     font=t_sets[mark]['font'],
-                     fontsize=t_sets[mark]['fontsize'],
-                     color=t_sets[mark]['color'],
-                     # bg_color=t_sets[mark]['bg_clr']
-                     )
+                         font=t_sets[mark]['font'],
+                         fontsize=t_sets[mark]['fontsize'],
+                         color=t_sets[mark]['color'],
+                         # bg_color=t_sets[mark]['bg_clr']
+                         )
 
     traj = Trajectory.load_list(t_sets[mark]['tracking'])
     for i in traj[:1]:
@@ -159,7 +157,7 @@ def edit_text(text, mark):
     text = text.set_start(t_sets[mark]['start'])
     text = text.set_end(t_sets[mark]['end'])
     text = text.crossfadein(t_sets[mark]['fadein'])
-    text = text.crossfadein(t_sets[mark]['fadeout'])
+    # text = text.crossfadein(t_sets[mark]['fadeout'])
 
     return text
 

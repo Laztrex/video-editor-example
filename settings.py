@@ -34,7 +34,6 @@ TEXT_SCENARIOS = {
         'start': (0, 6),
         'end': (0, 9.999),
         'fadein': 0.3,
-        'fadeout': 0.3,
 
         'tracking': 'files/tracking/towers.txt'
     },
@@ -61,3 +60,52 @@ TEXT_SCENARIOS = {
 #             wr.writelines([str(m) for m in u])
 #             wr.write('\n')
 #             u.clear()
+
+
+# a1 = []
+# a2 = []
+# temp_a = []
+# temp_a2 = []
+# temp_b = []
+# temp_e = []
+# temp_c = []
+# temp_f = []
+#
+# finish = []
+# import numpy as np
+#
+# with open("files/tracking/river.txt", 'r') as file:
+#     for i in file.readlines()[1:]:
+#         a, b, c, d, e, f = i.split()
+#         a1.append(a)
+#         a2.append(d)
+#         if int(a) < 2999:
+#             for dx, i in enumerate([a, b, c, d, e, f]):
+#                 finish.append(i)
+#                 if dx != 5:
+#                     finish.append('	')
+#             finish.append('\n')
+#         else:
+#             temp_a.append(a)
+#             temp_a2.append(d)
+#             temp_b.append(int(b))
+#             temp_e.append(int(e))
+#             temp_c.append(int(c) + 400)
+#             temp_f.append(int(f))
+#
+#     b1 = np.linspace(start=max(temp_b), stop=min(temp_b), num=len(temp_b), dtype=int)
+#     c1 = np.linspace(start=min(temp_c), stop=max(temp_c), num=len(temp_c), dtype=int)
+#
+#     for j in range(len(b1)):
+#         finish.append(temp_a[j])
+#         finish.append('	')
+#         finish.append(b1[j])
+#         finish.append('	')
+#         finish.append(c1[j])
+#         finish.append('	')
+#         finish.append(temp_a2[j])
+#         finish.append('	')
+#         finish.append(b1[j] - 150)
+#         finish.append('	')
+#         finish.append(c1[j])
+#         finish.append('\n')
