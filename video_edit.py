@@ -10,7 +10,72 @@ from settings import VIDEO_SCENARIOS as v_sets
 from settings import TEXT_SCENARIOS as t_sets
 
 
-class TrickyBug(mvpy.TextClip):
+def new_func(self, picture, t):
+    hf, wf = framesize = picture.shape[:2]
+
+    if self.ismask and picture.max():
+        return np.minimum(1, picture + self.blit_on(np.zeros(framesize), t))
+    # -----------------------
+    if self.start == 6:  # t_sets['start']
+        ct = t + 7 - self.start  # clip time
+    # -----------------------
+    else:
+        ct = t - self.start  # clip time
+
+    img = self.get_frame(ct)
+    mask = self.mask.get_frame(ct) if self.mask else None
+
+    if mask is not None and ((img.shape[0] != mask.shape[0]) or (img.shape[1] != mask.shape[1])):
+        img = self.fill_array(img, mask.shape)
+
+    hi, wi = img.shape[:2]
+
+    # SET POSITION
+    pos = self.pos(ct)
+
+    # preprocess short writings of the position
+    if isinstance(pos, str):
+        pos = {'center': ['center', 'center'],
+               'left': ['left', 'center'],
+               'right': ['right', 'center'],
+               'top': ['center', 'top'],
+               'bottom': ['center', 'bottom']}[pos]
+    else:
+        pos = list(pos)
+
+    # is the position relative (given in % of the clip's size) ?
+    if self.relative_pos:
+        for i, dim in enumerate([wf, hf]):
+            if not isinstance(pos[i], str):
+                pos[i] = dim * pos[i]
+
+    if isinstance(pos[0], str):
+        D = {'left': 0, 'center': (wf - wi) / 2, 'right': wf - wi}
+        pos[0] = D[pos[0]]
+
+    if isinstance(pos[1], str):
+        D = {'top': 0, 'center': (hf - hi) / 2, 'bottom': hf - hi}
+        pos[1] = D[pos[1]]
+
+    pos = map(int, pos)
+
+    return blit(img, picture, pos, mask=mask, ismask=self.ismask)
+
+
+class TrickyBugImg(mvpy.ImageClip):
+    """
+    Временное решение проблемы Multiple ImageClips
+    """
+    def blit_on(self, picture, t):
+        """
+        Returns the result of the blit of the clip's frame at time `t`
+        on the given `picture`, the position of the clip being given
+        by the clip's ``pos`` attribute. Meant for compositing.
+        """
+        return new_func(self, picture, t)
+
+
+class TrickyBugText(mvpy.TextClip):
     """
     Временное решение проблемы Multiple TextClips
     """
@@ -21,55 +86,7 @@ class TrickyBug(mvpy.TextClip):
         on the given `picture`, the position of the clip being given
         by the clip's ``pos`` attribute. Meant for compositing.
         """
-        hf, wf = framesize = picture.shape[:2]
-
-        if self.ismask and picture.max():
-            return np.minimum(1, picture + self.blit_on(np.zeros(framesize), t))
-        # -----------------------
-        if self.start == 6:  # t_sets['start']
-            ct = t + 7 - self.start  # clip time
-        # -----------------------
-        else:
-            ct = t - self.start  # clip time
-
-        img = self.get_frame(ct)
-        mask = self.mask.get_frame(ct) if self.mask else None
-
-        if mask is not None and ((img.shape[0] != mask.shape[0]) or (img.shape[1] != mask.shape[1])):
-            img = self.fill_array(img, mask.shape)
-
-        hi, wi = img.shape[:2]
-
-        # SET POSITION
-        pos = self.pos(ct)
-
-        # preprocess short writings of the position
-        if isinstance(pos, str):
-            pos = {'center': ['center', 'center'],
-                   'left': ['left', 'center'],
-                   'right': ['right', 'center'],
-                   'top': ['center', 'top'],
-                   'bottom': ['center', 'bottom']}[pos]
-        else:
-            pos = list(pos)
-
-        # is the position relative (given in % of the clip's size) ?
-        if self.relative_pos:
-            for i, dim in enumerate([wf, hf]):
-                if not isinstance(pos[i], str):
-                    pos[i] = dim * pos[i]
-
-        if isinstance(pos[0], str):
-            D = {'left': 0, 'center': (wf - wi) / 2, 'right': wf - wi}
-            pos[0] = D[pos[0]]
-
-        if isinstance(pos[1], str):
-            D = {'top': 0, 'center': (hf - hi) / 2, 'bottom': hf - hi}
-            pos[1] = D[pos[1]]
-
-        pos = map(int, pos)
-
-        return blit(img, picture, pos, mask=mask, ismask=self.ismask)
+        return new_func(self, picture, t)
 
 
 def edit_video(loadtitle, savetitle, cuts):
@@ -95,10 +112,28 @@ def edit_video(loadtitle, savetitle, cuts):
     text_1 = edit_text("Москва-река", 'text_1')
     text_2 = edit_text("Москва-сити", 'text_2')
 
-    final_clip = mvpy.CompositeVideoClip([final_clip, text_1, text_2])
+    logo_1 = add_img("files/icon/location.png", mark='text_1')
+    logo_2 = add_img("files/icon/location.png", mark='text_2')
+
+    final_clip = mvpy.CompositeVideoClip([final_clip, text_1, text_2, logo_1, logo_2])
 
     save_video(final_clip, savetitle)
     video.close()
+
+
+def add_img(img, mark):
+    logo = TrickyBugImg(img)
+
+    traj = Trajectory.load_list(t_sets[mark]['tracking'])
+    for i in traj[1:]:
+        logo = logo.set_position(i)
+
+    logo = logo.set_start(t_sets[mark]['start'])
+    logo = logo.set_end(t_sets[mark]['end'])
+    logo = logo.crossfadein(t_sets[mark]['fadein'])
+    logo = logo.crossfadein(t_sets[mark]['fadeout'])
+
+    return logo
 
 
 def edit_text(text, mark):
@@ -110,7 +145,7 @@ def edit_text(text, mark):
         :type mark: str
     :return: TextClip
     """
-    text = TrickyBug(text,
+    text = TrickyBugText(text,
                      font=t_sets[mark]['font'],
                      fontsize=t_sets[mark]['fontsize'],
                      color=t_sets[mark]['color'],
@@ -118,7 +153,7 @@ def edit_text(text, mark):
                      )
 
     traj = Trajectory.load_list(t_sets[mark]['tracking'])
-    for i in traj:
+    for i in traj[:1]:
         text = text.set_position(i)
 
     text = text.set_start(t_sets[mark]['start'])
