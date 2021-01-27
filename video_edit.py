@@ -3,6 +3,8 @@ import os
 import moviepy.editor as mvpy
 from moviepy.video.tools.tracking import Trajectory
 from moviepy.video.tools.drawing import blit
+from moviepy.video.tools.segmenting import findObjects
+from moviepy.video.fx.mask_color import mask_color
 
 import numpy as np
 
@@ -98,7 +100,15 @@ def edit_video(loadtitle, savetitle, cuts):
         :type cuts: list(tuple[t, t]), t is hh:mm:ss.ms
     :return: None
     """
-    video = mvpy.VideoFileClip(loadtitle)
+    video = mvpy.VideoFileClip(loadtitle, target_resolution=(1080, 1920))
+    im = mvpy.ImageClip('files/icon/window.png')
+    regions = findObjects(im)
+
+    back_clips = [mvpy.VideoFileClip('media/load/IMG_0833.MP4', audio=False).subclip(12, 22)]
+    comp_clips = [c.resize(r.size)
+                  .set_mask(r.mask)
+                  .set_pos(r.screenpos)
+                  for c, r in zip([back_clips[0], back_clips[0]], [regions[1], regions[2]])]
 
     clips = []
     for cut in cuts:
@@ -107,13 +117,19 @@ def edit_video(loadtitle, savetitle, cuts):
 
     final_clip = mvpy.concatenate_videoclips(clips)
 
-    text_1 = edit_text("Москва-река", 'text_1')
-    text_2 = edit_text("Москва-сити", 'text_2')
+    text_1 = edit_text("Moscow River", 'text_1')
+    text_2 = edit_text("Moscow City", 'text_2')
 
     logo_1 = add_img("files/icon/location.png", mark='text_1')
     logo_2 = add_img("files/icon/location.png", mark='text_2')
 
-    final_clip = mvpy.CompositeVideoClip([final_clip, text_1, text_2, logo_1, logo_2])
+    # masked_logo_1 = mask_color(logo_1, color=[255, 255, 255])
+    # masked_logo_2 = mask_color(logo_2, color=[255, 255, 255], thr=20, s=3)
+
+    final_clip = mvpy.CompositeVideoClip([final_clip,
+                                          text_1, text_2,
+                                          logo_1, logo_2,
+                                          *comp_clips], use_bgclip=True)  # use_bgclip=True
 
     save_video(final_clip, savetitle)
     video.close()
@@ -147,6 +163,7 @@ def edit_text(text, mark):
                          font=t_sets[mark]['font'],
                          fontsize=t_sets[mark]['fontsize'],
                          color=t_sets[mark]['color'],
+                         stroke_color='grey'
                          # bg_color=t_sets[mark]['bg_clr']
                          )
 
