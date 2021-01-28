@@ -12,8 +12,8 @@ VIDEO_SCENARIOS = {
 
 TEXT_SCENARIOS = {
     'text_1': {
-        'font': 'Amiri-Bold',
-        'fontsize': 60,
+        'font': 'Sydney',
+        'fontsize': 30,
         'color': 'grey',
         'bg_clr': 'gray35',
         'pos': ('center', 0.6),
@@ -26,8 +26,8 @@ TEXT_SCENARIOS = {
     },
 
     'text_2': {
-        'font': 'Amiri-Bold',
-        'fontsize': 60,
+        'font': 'Sydney',
+        'fontsize': 30,
         'color': 'grey',
         'bg_clr': 'gray35',
         'pos': ('left', 0.6),

@@ -3,6 +3,8 @@ import os
 import moviepy.editor as mvpy
 from moviepy.video.tools.tracking import Trajectory
 from moviepy.video.tools.drawing import blit
+from moviepy.video.tools.segmenting import findObjects
+from moviepy.video.fx.mask_color import mask_color
 
 import numpy as np
 
@@ -87,36 +89,48 @@ class TrickyBugText(mvpy.TextClip):
         return fix_problem_pos_mlt_clips(self, picture, t)
 
 
-def edit_video(loadtitle, savetitle, cuts):
+def edit_video(input_videos, savetitle, cuts):
     """
     Main function. Сценарий обработки видео.
-    :param loadtitle: указатель на видео, имя
-        :type loadtitle: str
+    :param input_videos: указатели на видео, имя
+        :type input_videos: list
     :param savetitle: имя для обработанного видео
         :type savetitle: str
-    :param cuts: список временных меток для обрезки видео
-        :type cuts: list(tuple[t, t]), t is hh:mm:ss.ms
     :return: None
     """
-    video = mvpy.VideoFileClip(loadtitle)
-
     clips = []
-    for cut in cuts:
-        clip = video.subclip(cut[0], cut[1])
+    for movie, cut in zip(input_videos, cuts):
+        clip = mvpy.VideoFileClip(movie, target_resolution=(1080, 1920)).subclip(*cut)
         clips.append(clip)
+
+    im = mvpy.ImageClip('files/icon/window.png')
+    regions = findObjects(im)
+
+    comp_clips = [c.resize(r.size)
+                  .set_mask(r.mask)
+                  .set_pos(r.screenpos)
+                  for c, r in zip([clips[2], clips[3]], [regions[1], regions[2]])]
 
     final_clip = mvpy.concatenate_videoclips(clips)
 
-    text_1 = edit_text("Москва-река", 'text_1')
-    text_2 = edit_text("Москва-сити", 'text_2')
+    text_1 = edit_text("Moscow River", 'text_1')
+    text_2 = edit_text("Moscow City", 'text_2')
 
     logo_1 = add_img("files/icon/location.png", mark='text_1')
     logo_2 = add_img("files/icon/location.png", mark='text_2')
 
-    final_clip = mvpy.CompositeVideoClip([final_clip, text_1, text_2, logo_1, logo_2])
+    # masked_logo_1 = mask_color(logo_1, color=[255, 255, 255])
+    # masked_logo_2 = mask_color(logo_2, color=[255, 255, 255], thr=20, s=3)
+
+    final_clip = mvpy.CompositeVideoClip([final_clip,
+                                          text_1, text_2,
+                                          logo_1, logo_2,
+                                          *comp_clips])  # use_bgclip=True
 
     save_video(final_clip, savetitle)
-    video.close()
+
+    for v in clips:
+        v.close()
 
 
 def add_img(img, mark):
@@ -147,6 +161,7 @@ def edit_text(text, mark):
                          font=t_sets[mark]['font'],
                          fontsize=t_sets[mark]['fontsize'],
                          color=t_sets[mark]['color'],
+                         stroke_color='grey'
                          # bg_color=t_sets[mark]['bg_clr']
                          )
 
@@ -183,12 +198,21 @@ def save_video(clip, savetitle, path='media/save'):
 
 
 if __name__ == '__main__':
-    title_open = v_sets['sets']['dir_load'] + 'IMG_0039'
+    input_videos = []
+    for video, ext, num in zip(['IMG_0039', 'IMG_0833', 'IMG_0040', 'IMG_0042'],
+                               ['.MOV', '.MP4', '.mp4', '.mp4'],
+                               [2, 1, 1, 1]):
+        title_open = v_sets['sets']['dir_load'] + video
+        loadtitle = [title_open + ext] * num
+        input_videos += loadtitle
+
     title_save = v_sets['sets']['dir_save'] + 'IMG_0039'
-    loadtitle = title_open + v_sets['sets']['load_ext']
     savetitle = title_save + v_sets['sets']['save_ext']
 
     cuts = [('00:00:00.00', '00:00:04.00'),
-            ('00:00:14.00', '00:00:20.00')]
+            ('00:00:14.00', '00:00:20.00'),
+            ('00:00:12.00', '00:00:22.00'),
+            ('00:00:03.00', '00:00:13.00'),
+            ('00:00:02.00', '00:00:12.00')]
 
-    edit_video(loadtitle, savetitle, cuts)
+    edit_video(input_videos, savetitle, cuts)
