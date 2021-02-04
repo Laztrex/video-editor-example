@@ -8,6 +8,8 @@ from moviepy.video.fx.mask_color import mask_color
 
 import numpy as np
 
+from effects import mask_img
+
 from settings import VIDEO_SCENARIOS as v_sets
 from settings import TEXT_SCENARIOS as t_sets
 
@@ -111,13 +113,18 @@ def edit_video(input_videos, savetitle, cuts):
                   .set_pos(r.screenpos)
                   for c, r in zip([clips[2], clips[3]], [regions[1], regions[2]])]
 
-    final_clip = mvpy.concatenate_videoclips(clips)
-
     text_1 = edit_text("Moscow River", 'text_1')
     text_2 = edit_text("Moscow City", 'text_2')
+    # mask_img("files/icon/location.png")
 
     logo_1 = add_img("files/icon/location.png", mark='text_1')
     logo_2 = add_img("files/icon/location.png", mark='text_2')
+
+    # mask_clip = mvpy.CompositeVideoClip([logo_1, logo_2], bg_color=(255), ismask=True)
+    #
+    # clips[0].mask = mask_clip
+
+    final_clip = mvpy.concatenate_videoclips(clips)
 
     # masked_logo_1 = mask_color(logo_1, color=[255, 255, 255])
     # masked_logo_2 = mask_color(logo_2, color=[255, 255, 255], thr=20, s=3)
