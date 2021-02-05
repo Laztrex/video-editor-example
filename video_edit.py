@@ -1,6 +1,7 @@
 import os
 
 import moviepy.editor as mvpy
+import moviepy.video.fx.all as vfx
 from moviepy.video.tools.tracking import Trajectory
 from moviepy.video.tools.drawing import blit
 from moviepy.video.tools.segmenting import findObjects
@@ -69,17 +70,6 @@ def fix_problem_pos_mlt_clips(self, picture, t):
     return blit(img, picture, pos, mask=mask, ismask=self.ismask)
 
 
-class TrickyBugImg(mvpy.ImageClip):
-
-    def blit_on(self, picture, t):
-        """
-        Returns the result of the blit of the clip's frame at time `t`
-        on the given `picture`, the position of the clip being given
-        by the clip's ``pos`` attribute. Meant for compositing.
-        """
-        return fix_problem_pos_mlt_clips(self, picture, t)
-
-
 class TrickyBugText(mvpy.TextClip):
 
     def blit_on(self, picture, t):
@@ -101,6 +91,8 @@ def edit_video(input_videos, savetitle, cuts):
     :return: None
     """
     clips = []
+    tfreeze = mvpy.cvsecs(7.10)
+
     for movie, cut in zip(input_videos, cuts):
         clip = mvpy.VideoFileClip(movie, target_resolution=(1080, 1920)).subclip(*cut)
         clips.append(clip)
@@ -109,30 +101,45 @@ def edit_video(input_videos, savetitle, cuts):
     regions = findObjects(im)
 
     comp_clips = [c.resize(r.size)
-                  .set_mask(r.mask)
-                  .set_pos(r.screenpos)
+                      .set_mask(r.mask)
+                      .set_pos(r.screenpos)
                   for c, r in zip([clips[2], clips[3]], [regions[1], regions[2]])]
 
     text_1 = edit_text("Moscow River", 'text_1')
     text_2 = edit_text("Moscow City", 'text_2')
-    # mask_img("files/icon/location.png")
 
-    logo_1 = add_img("files/icon/location.png", mark='text_1')
-    logo_2 = add_img("files/icon/location.png", mark='text_2')
+    # logo_1 = add_img("files/icon/location.png", mark='text_1')
+    # logo_2 = mvpy.ImageClip("files/icon/location.png", ismask=True)
+    # logo_2 = add_img("files/icon/location.png", mark='text_2')
 
-    # mask_clip = mvpy.CompositeVideoClip([logo_1, logo_2], bg_color=(255), ismask=True)
-    #
-    # clips[0].mask = mask_clip
+    represent_video = mvpy.concatenate_videoclips(clips)
 
-    final_clip = mvpy.concatenate_videoclips(clips)
+    pre_final_clip = mvpy.CompositeVideoClip([represent_video,
+                                              text_1,
+                                              text_2,
+                                              *comp_clips])
 
-    # masked_logo_1 = mask_color(logo_1, color=[255, 255, 255])
-    # masked_logo_2 = mask_color(logo_2, color=[255, 255, 255], thr=20, s=3)
+    # -------------------------------------------------------------------
+    clip_before = pre_final_clip.subclip(pre_final_clip.start, tfreeze)
+    clip_after = pre_final_clip.subclip(tfreeze, pre_final_clip.end)
 
-    final_clip = mvpy.CompositeVideoClip([final_clip,
-                                          text_1, text_2,
-                                          logo_1, logo_2,
-                                          *comp_clips])  # use_bgclip=True
+    im_freeze = represent_video.to_ImageClip(tfreeze)
+    painting = (represent_video.fx(vfx.painting, saturation=1.6, black=0.006)
+                .to_ImageClip(tfreeze))
+
+    painting_txt = (mvpy.CompositeVideoClip([painting,
+                                             # logo_2.set_position(('center', 'center')),
+                                             ])  # открытка
+                    .add_mask()
+                    .set_duration(3)
+                    .crossfadein(0.5)
+                    .crossfadeout(0.5))
+
+    painting_fading = mvpy.CompositeVideoClip([im_freeze, painting_txt])
+
+    final_clip = mvpy.concatenate_videoclips([clip_before,
+                                              painting_fading.set_duration(3),
+                                              clip_after])
 
     save_video(final_clip, savetitle)
 
@@ -140,19 +147,10 @@ def edit_video(input_videos, savetitle, cuts):
         v.close()
 
 
-def add_img(img, mark):
-    logo = TrickyBugImg(img)
-
-    traj = Trajectory.load_list(t_sets[mark]['tracking'])
-    for i in traj[1:]:
-        logo = logo.set_position(i)
-
-    logo = logo.set_start(t_sets[mark]['start'])
-    logo = logo.set_end(t_sets[mark]['end'])
-    logo = logo.crossfadein(t_sets[mark]['fadein'])
-    # logo = logo.crossfadein(t_sets[mark]['fadeout'])
-
-    return logo
+def add_text_background(text):
+    txt_col = text.on_color(size=(text.w + 10, text.h - 10),
+                            color=(0, 0, 0), col_opacity=0.6)
+    return txt_col.set_pos(text.pos)
 
 
 def edit_text(text, mark):
@@ -175,7 +173,6 @@ def edit_text(text, mark):
     traj = Trajectory.load_list(t_sets[mark]['tracking'])
     for i in traj[:1]:
         text = text.set_position(i)
-
     text = text.set_start(t_sets[mark]['start'])
     text = text.set_end(t_sets[mark]['end'])
     text = text.crossfadein(t_sets[mark]['fadein'])
