@@ -16,6 +16,11 @@ from settings import TEXT_SCENARIOS as t_sets
 
 
 class VideoEdit:
+    """
+    v. Python 3.7.5
+
+    Класс редактирования видео (демонстрация)
+    """
 
     def __init__(self, input_videos, savetitle, cuts):
         self.clips = []
@@ -25,6 +30,9 @@ class VideoEdit:
         self.save_title = savetitle
 
     def run(self):
+        """
+        Запуск редактора (демонстрационный режим)
+        """
         for movie, cut in zip(self.input_videos, self.cuts):
             clip = mvpy.VideoFileClip(movie, audio=False,
                                       target_resolution=(1080, 1920)).subclip(*cut)  # resize_algorithm='bicublin'
@@ -59,6 +67,16 @@ class VideoEdit:
             v.close()
 
     def painting_gen(self, video, text, sizes_screen):
+        """
+        Генератор составных стилизованных стоп-кадров (+ здесь эффекта зума)
+        :param video: видеофайл, откуда берутся стоп-кадры
+            :type video: class VideoClip
+        :param text: текст поверх кадра
+            :type text: class TextClip
+        :param sizes_screen: размеры исходного текстового клипа (TextClip от метода get_text)
+            :type sizes_screen: list
+        :return:
+        """
         for idx, tfreeze in enumerate(self.tfreezes):
             im_freeze = video.to_ImageClip(tfreeze)
             painting = (video.fx(vfx.blackwhite)  # RGB='CRT_phosphor'
@@ -80,6 +98,12 @@ class VideoEdit:
                 .crossfadeout(0.3)
 
     def compilations(self, regions):
+        """
+        Метод для генерирования набора видео для врезки в форму (см. метод get_regions)
+        :param regions: координаты секторов для встраивания видео в форму
+            :type regions: list(ImageClip, ...)
+        :return: список разделённых по секторам клипов
+        """
         return [c.resize(r.size)
                     .set_mask(r.mask)
                     .set_pos(r.screenpos)
@@ -92,11 +116,28 @@ class VideoEdit:
             )]
 
     def slices_videos(self, work_vid):
+        """
+        Генератор подклипов для вставки динамических стоп-кадров (см. метод painting_gen)
+        :param work_vid: исходный клип
+            :type work_vid: class VideoClip
+        """
         for x, y in zip([work_vid.start, self.tfreezes[0], self.tfreezes[1]],
                         [self.tfreezes[0], self.tfreezes[1], work_vid.end]):
             yield work_vid.subclip(x, y)
 
     def get_text(self, text, mode, track=False):
+        """
+        Метод создаёт текстовый клип
+        :param text: строка текста для записи
+            :type text: str
+        :param mode: признак сетки параметров для текстового клипа (из settings.TEXT_SCENARIOS)
+            :type mode: str
+        :param track: флаг для создания динамического текста. Параметры движения задаются в текстовом файле
+        (см. settings.TEXT_SCENARIOS)
+            :type track: bool
+        :return: текстовый клип
+            :rtype class TextClip
+        """
         text = mvpy.TextClip(text,
                              font=t_sets['sets'][mode]['font'],
                              fontsize=t_sets['sets'][mode]['fontsize'],
@@ -113,15 +154,35 @@ class VideoEdit:
         return text
 
     def add_text_background(self, text):
+        """
+        Добавление текста на цветном фоне
+        :param text: класс текстового клипа для записи
+            :type text: class TextClip
+        :return: модифицированный TextClip
+        """
         txt_col = text.on_color(size=(text.w + 10, text.h - 10),
                                 color=(0, 0, 0), col_opacity=0.6)
         return txt_col.set_pos(text.pos)
 
     def get_regions(self):
+        """
+        Сегментирование на основе заданного паттерна (позднее настройки будут вынесены в settings)
+        :return: список ImageClips с детектированными объектами на основе паттерна
+            :rtype list(ImageClip, ...)
+        """
         im = mvpy.ImageClip('files/icon/window.png')
         return findObjects(im)
 
     def save_video(self, clip, savetitle, path='media/save'):
+        """
+        Метод сохранение отредактированного видео
+        :param clip: финальное видео
+            :type clip: VideoClip
+        :param savetitle: имя сохранённого файла
+            :type savetitle: str
+        :param path: путь к видеофайлу
+            :type path: str
+        """
         path = os.path.join(path)
         os.makedirs(path, exist_ok=True)
 
