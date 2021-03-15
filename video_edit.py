@@ -90,7 +90,7 @@ def edit_video(input_videos, savetitle, cuts):
     :return: None
     """
     clips = []
-    tfreezes = [mvpy.cvsecs(15.10), mvpy.cvsecs(27.10)]
+    tfreezes = [mvpy.cvsecs(15.10), mvpy.cvsecs(23.10)]
 
     for movie, cut in zip(input_videos, cuts):
         clip = mvpy.VideoFileClip(movie, audio=False, target_resolution=(1080, 1920)).subclip(*cut)
@@ -102,9 +102,12 @@ def edit_video(input_videos, savetitle, cuts):
     comp_clips = [c.resize(r.size)
                       .set_mask(r.mask)
                       .set_pos(r.screenpos)
-                  for c, r in zip([clips[1], clips[2]], [regions[1], regions[2]])]
+                      .set_duration(3)
+                      .set_start(sec_st)
+                  for c, r, sec_st in zip([clips[1], clips[2], clips[2], clips[3], clips[3]],
+                                                     [regions[1], regions[2], regions[1], regions[2], regions[2]],
+                                                     [0, 0, 10, 10, 20])]
 
-    # text_1 = add_text("Moscow River", 'text_1')
     text_2 = [add_text("Moscow City", 'text_2'), add_text("Vorobyovy\nHills", 'text_2')]
 
     # logo_1 = add_img("files/icon/location.png", mark='text_1')
@@ -113,45 +116,47 @@ def edit_video(input_videos, savetitle, cuts):
 
     represent_video = mvpy.concatenate_videoclips(clips)
 
-    pre_final_clip = mvpy.CompositeVideoClip([represent_video,
-                                              # text_1,
-                                              # text_2,
-                                              *comp_clips])
+    # pre_final_clip_temp = mvpy.CompositeVideoClip([represent_video])
+    pre_final_clip = mvpy.CompositeVideoClip([represent_video, *comp_clips])
 
     # -------------------------------------------------------------------
-    clip1_before = pre_final_clip.subclip(pre_final_clip.start, tfreezes[0])
-    clip1_after = pre_final_clip.subclip(tfreezes[0], tfreezes[1])
-    clip2_after = pre_final_clip.subclip(tfreezes[1], pre_final_clip.end)
+    clips_slices = [pre_final_clip.subclip(x, y) for x, y in zip([pre_final_clip.start, tfreezes[0], tfreezes[1]],
+                                                                 [tfreezes[0], tfreezes[1], pre_final_clip.end])]
 
     painting_fading = []
     screensizes = [text_2[0].size, text_2[1].size]
 
     for idx, tfreeze in enumerate(tfreezes):
-        im_freeze = pre_final_clip.to_ImageClip(tfreeze)
+        im_freeze = represent_video.to_ImageClip(tfreeze)
 
-        painting = (pre_final_clip.fx(vfx.blackwhite, RGB='CRT_phosphor')
+        painting = (represent_video.fx(vfx.blackwhite, RGB='CRT_phosphor')
                     .to_ImageClip(tfreeze))
 
-        text = mvpy.CompositeVideoClip([text_2[idx]
-                                       .resize(height=screensizes[idx][1] * 4)
-                                       .resize(lambda t: 1 + .01 * t)])
-
-        painting_txt = (mvpy.CompositeVideoClip([painting,
-                                                 text
-                                                 .set_position(('center', 'center'))
-                                                 .resize(screensizes[idx])
+        painting_txt = (mvpy.CompositeVideoClip([painting
+                                                .resize(lambda t: 1 + .008 * (3 - t)),
+                                                 text_2[idx]
+                                                # .resize(height=screensizes[idx][1] * 4)
+                                                .resize(lambda t: 1 + .01 * t)
+                                                .set_position(('center', 'center'))
+                                                 # .resize(screensizes[idx])
+                                                 # .set_fadeout(0.3)
                                                  ])  # открытка
-                        .resize(lambda t: 1 + .009 * (3 - t))
                         .add_mask()
+                        # .set_duration(3)
                         )
 
-        painting_fading.append(mvpy.CompositeVideoClip([im_freeze, painting_txt]).set_duration(3))
-
-    final_clip = mvpy.concatenate_videoclips([clip1_before,
+        # painting_fading += [im_freeze, painting_txt]
+        painting_fading.append(mvpy.CompositeVideoClip([im_freeze, painting_txt])
+                               .set_duration(3)
+                               .crossfadeout(0.3)
+                               )
+    # painting_fading = mvpy.CompositeVideoClip(painting_fading)
+    # final_clip = mvpy.CompositeVideoClip(clips_slices, painting_fading)
+    final_clip = mvpy.concatenate_videoclips([clips_slices[0],
                                               painting_fading[0],
-                                              clip1_after,
+                                              clips_slices[1],
                                               painting_fading[1],
-                                              clip2_after])
+                                              clips_slices[2]])
 
     save_video(final_clip, savetitle)
 
@@ -204,10 +209,10 @@ def save_video(clip, savetitle, path='media/save'):
     path = os.path.join(path)
     os.makedirs(path, exist_ok=True)
 
-    clip.write_videofile(savetitle, threads=8, fps=24,
+    clip.write_videofile(savetitle, threads=4, fps=24,
                          codec=v_sets['sets']['vcodec'],
                          preset=v_sets['sets']['compression'],
-                         ffmpeg_params=["-crf", '0', "-framerate", v_sets['sets']['vquality']],
+                         ffmpeg_params=["-crf", v_sets['sets']['vquality']],
                          remove_temp=True)
 
 

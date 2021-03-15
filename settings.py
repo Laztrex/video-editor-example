@@ -26,15 +26,15 @@ TEXT_SCENARIOS = {
     },
 
     'text_2': {
-        'font': 'Copperplate-Gothic-Bold',  # AvantGarde-Book
-        'fontsize': 190,
+        'font': 'The-Capt',  # AvantGarde-Book
+        'fontsize': 350,
         'color': 'grey',
         'bg_clr': 'gray35',
         'pos': ('left', 0.6),
         'start': (0, 6),
         'end': (0, 9.999),
         'fadeout': 0.2,
-        'kerning': 5,
+        'kerning': 9,
 
         'tracking': 'files/tracking/towers.txt'
     },
