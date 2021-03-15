@@ -2,7 +2,7 @@ VIDEO_SCENARIOS = {
     'sets': {
         'vcodec': "libx264",
         'vquality': "24",
-        'compression': "slow",  # slow, ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+        'compression': "ultrafast",  # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
         'dir_load': "media/load/",
         'dir_save': "media/save/",
         'load_ext': ".mov",
@@ -26,14 +26,15 @@ TEXT_SCENARIOS = {
     },
 
     'text_2': {
-        'font': 'Amiri-regular',
-        'fontsize': 30,
+        'font': 'Copperplate-Gothic-Bold',  # AvantGarde-Book
+        'fontsize': 190,
         'color': 'grey',
         'bg_clr': 'gray35',
         'pos': ('left', 0.6),
         'start': (0, 6),
         'end': (0, 9.999),
-        'fadein': 0.3,
+        'fadeout': 0.2,
+        'kerning': 5,
 
         'tracking': 'files/tracking/towers.txt'
     },
