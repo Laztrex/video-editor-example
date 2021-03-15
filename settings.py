@@ -1,7 +1,7 @@
 VIDEO_SCENARIOS = {
     'sets': {
         'vcodec': "libx264",
-        'vquality': "24",
+        'vquality': "5",
         'compression': "ultrafast",  # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
         'dir_load': "media/load/",
         'dir_save': "media/save/",
@@ -11,33 +11,38 @@ VIDEO_SCENARIOS = {
 }
 
 TEXT_SCENARIOS = {
-    'text_1': {
-        'font': 'Amiri-regular',
-        'fontsize': 30,
-        'color': 'grey',
-        'bg_clr': 'gray35',
-        'pos': ('center', 0.6),
-        'start': (0, 1),
-        'end': (0, 6.958),
-        'fadein': 0.3,
-        'fadeout': 0.3,
+    'loc1': "Moscow City",
+    'loc2': "Vorobyovy\nHills",
 
-        'tracking': 'files/tracking/river.txt'
-    },
+    'sets':
+        {'text_1': {
+            'font': 'Amiri-regular',
+            'fontsize': 30,
+            'color': 'grey',
+            'bg_clr': 'gray35',
+            'pos': ('center', 0.6),
+            'start': (0, 1),
+            'end': (0, 6.958),
+            'fadein': 0.3,
+            'fadeout': 0.3,
 
-    'text_2': {
-        'font': 'The-Capt',  # AvantGarde-Book
-        'fontsize': 350,
-        'color': 'grey',
-        'bg_clr': 'gray35',
-        'pos': ('left', 0.6),
-        'start': (0, 6),
-        'end': (0, 9.999),
-        'fadeout': 0.2,
-        'kerning': 9,
+            'tracking': 'files/tracking/river.txt'
+        },
 
-        'tracking': 'files/tracking/towers.txt'
-    },
+            'text_2': {
+                'font': 'AvantGarde-Bold',  # AvantGarde-Book
+                'fontsize': 250,
+                'color': 'grey',
+                'bg_clr': 'gray35',
+                'pos': ('left', 0.6),
+                'start': (0, 6),
+                'end': (0, 9.999),
+                'fadeout': 0.2,
+                'kerning': 5,
+
+                'tracking': 'files/tracking/towers.txt'
+            }
+        },
 }
 
 # from moviepy.video.tools.tracking import manual_tracking, Trajectory
