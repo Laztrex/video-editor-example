@@ -4,6 +4,7 @@ import moviepy.editor as mvpy
 import moviepy.video.fx.all as vfx
 from moviepy.video.tools.tracking import Trajectory
 from moviepy.video.tools.drawing import blit
+from moviepy.video.tools.drawing import circle
 from moviepy.video.tools.segmenting import findObjects
 from moviepy.video.fx.mask_color import mask_color
 
@@ -35,7 +36,8 @@ class VideoEdit:
         """
         for movie, cut in zip(self.input_videos, self.cuts):
             clip = mvpy.VideoFileClip(movie, audio=False,
-                                      target_resolution=(1080, 1920)).subclip(*cut)  # resize_algorithm='bicublin'
+                                      target_resolution=(1080, 1920)).subclip(
+                *cut)  # resize_algorithm='bicublin'
             self.clips.append(clip)
 
         text = [self.get_text(text, mode) for text, mode in zip([t_sets['loc1'], t_sets['loc2']],
@@ -97,6 +99,22 @@ class VideoEdit:
                 .set_duration(3) \
                 .crossfadeout(0.3)
 
+    def set_figure_frame(self, clip):
+        """
+        Метод для доп. эффектов маски
+        :param clip: клип для трансформации
+            :type clip: class VideoClip
+        :return: клип с преобразованной маской
+            :rtype class VideoClip
+        """
+        # video = clip.copy().add_mask()
+        # video.mask.get_frame = lambda t: circle(screensize=(video.w, video.h),
+        #                                         center=(video.w / 2, video.h / 4),
+        #                                         radius=max(0, int(800 - 200 * t)),
+        #                                         col1=1, col2=0, blur=4)
+        # clip = clip.set_mask(video.mask)
+        return clip
+
     def compilations(self, regions):
         """
         Метод для генерирования набора видео для врезки в форму (см. метод get_regions)
@@ -110,9 +128,15 @@ class VideoEdit:
                     .set_duration(sec_dur)
                     .set_start(sec_st)
                 for c, r, (sec_st, sec_dur) in zip(
-                [self.clips[1], self.clips[2], self.clips[2], self.clips[3], self.clips[3]],
-                [regions[1], regions[2], regions[1], regions[2], regions[2]],
-                [(0, 10), (0, 10), (10, 7), (10, 7), (17, 7)]
+                [self.clips[1], self.clips[2],
+                 self.clips[2], self.clips[3],
+                 self.clips[3]],
+                [self.set_figure_frame(regions[1]), self.set_figure_frame(regions[2]),
+                 self.set_figure_frame(regions[1]), self.set_figure_frame(regions[2]),
+                 self.set_figure_frame(regions[2])],
+                [(0, 10), (0, 10),
+                 (10, 7), (10, 7),
+                 (17, 7)]
             )]
 
     def slices_videos(self, work_vid):
