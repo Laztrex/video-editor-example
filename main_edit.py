@@ -3,14 +3,9 @@ import os
 import moviepy.editor as mvpy
 import moviepy.video.fx.all as vfx
 from moviepy.video.tools.tracking import Trajectory
-from moviepy.video.tools.drawing import blit
-from moviepy.video.tools.drawing import circle
 from moviepy.video.tools.segmenting import findObjects
-from moviepy.video.fx.mask_color import mask_color
 
-import numpy as np
-
-from effects import mask_img
+from effects import masked_with_offsets
 
 from settings import VIDEO_SCENARIOS as v_sets
 from settings import TEXT_SCENARIOS as t_sets
@@ -25,7 +20,7 @@ class VideoEdit:
 
     def __init__(self, input_videos, savetitle, cuts):
         self.clips = []
-        self.tfreezes = [mvpy.cvsecs(15.10), mvpy.cvsecs(23.10)]
+        self.tfreezes = [mvpy.cvsecs(12.10), mvpy.cvsecs(19.10)]
         self.input_videos = input_videos
         self.cuts = cuts
         self.save_title = savetitle
@@ -80,15 +75,14 @@ class VideoEdit:
         :return:
         """
         for idx, tfreeze in enumerate(self.tfreezes):
-            im_freeze = video.to_ImageClip(tfreeze)
-            painting = (video.fx(vfx.blackwhite)  # RGB='CRT_phosphor'
-                        .to_ImageClip(tfreeze))
+            im_freeze = video.subclip(tfreeze)
+            painting = (video.subclip(tfreeze).fx(vfx.blackwhite))  # RGB='CRT_phosphor'
 
-            painting_txt = (mvpy.CompositeVideoClip([painting
-                                                    .resize(lambda t: 1 + .01 * (3 - t)),
+            painting_txt = (mvpy.CompositeVideoClip([painting,
+                                                     # .resize(lambda t: 1 + .01 * (3 - t)),
                                                      text[idx]
                                                     .resize(height=sizes_screen[idx][1] * 4)
-                                                    .resize(lambda t: 1 + .01 * t)
+                                                    .resize(lambda t: 1 + .008 * t)
                                                     .set_position(('center', 'center'))
                                                     .resize(sizes_screen[idx])
                                                      ])  # открытка
@@ -96,24 +90,8 @@ class VideoEdit:
                             )
 
             yield mvpy.CompositeVideoClip([im_freeze, painting_txt]) \
-                .set_duration(3) \
+                .set_duration(2.5) \
                 .crossfadeout(0.3)
-
-    def set_figure_frame(self, clip):
-        """
-        Метод для доп. эффектов маски
-        :param clip: клип для трансформации
-            :type clip: class VideoClip
-        :return: клип с преобразованной маской
-            :rtype class VideoClip
-        """
-        # video = clip.copy().add_mask()
-        # video.mask.get_frame = lambda t: circle(screensize=(video.w, video.h),
-        #                                         center=(video.w / 2, video.h / 4),
-        #                                         radius=max(0, int(800 - 200 * t)),
-        #                                         col1=1, col2=0, blur=4)
-        # clip = clip.set_mask(video.mask)
-        return clip
 
     def compilations(self, regions):
         """
@@ -122,21 +100,23 @@ class VideoEdit:
             :type regions: list(ImageClip, ...)
         :return: список разделённых по секторам клипов
         """
+        mini_clip_1_ofs = masked_with_offsets(self.clips[1], with_no_ofs=False)
+        mini_clip_2_ofs = masked_with_offsets(self.clips[2], with_no_ofs=False)
+        mini_clip_3_ofs = masked_with_offsets(self.clips[3], with_no_ofs=False)
+
+        mini_clip_2 = masked_with_offsets(self.clips[2])
+        mini_clip_3 = masked_with_offsets(self.clips[3])
+
         return [c.resize(r.size)
                     .set_mask(r.mask)
                     .set_pos(r.screenpos)
-                    .set_duration(sec_dur)
-                    .set_start(sec_st)
-                for c, r, (sec_st, sec_dur) in zip(
-                [self.clips[1], self.clips[2],
-                 self.clips[2], self.clips[3],
-                 self.clips[3]],
-                [self.set_figure_frame(regions[1]), self.set_figure_frame(regions[2]),
-                 self.set_figure_frame(regions[1]), self.set_figure_frame(regions[2]),
-                 self.set_figure_frame(regions[2])],
-                [(0, 10), (0, 10),
-                 (10, 7), (10, 7),
-                 (17, 7)]
+                for c, r, in zip(
+                [mini_clip_1_ofs, mini_clip_2,
+                 mini_clip_2_ofs, mini_clip_3,
+                 mini_clip_3_ofs],
+                [regions[2], regions[1],
+                 regions[2], regions[1],
+                 regions[2]]
             )]
 
     def slices_videos(self, work_vid):
@@ -145,7 +125,7 @@ class VideoEdit:
         :param work_vid: исходный клип
             :type work_vid: class VideoClip
         """
-        for x, y in zip([work_vid.start, self.tfreezes[0], self.tfreezes[1]],
+        for x, y in zip([work_vid.start, self.tfreezes[0] + 3, self.tfreezes[1] + 3],
                         [self.tfreezes[0], self.tfreezes[1], work_vid.end]):
             yield work_vid.subclip(x, y)
 

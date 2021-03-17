@@ -1,5 +1,8 @@
 import cv2
 
+import moviepy.editor as mvpy
+from moviepy.video.tools.drawing import color_gradient
+
 
 def mask_img(img1, flag=True):
     """
@@ -43,3 +46,35 @@ def mask_img(img1, flag=True):
     cv2.imwrite("001.png", dst)
 
     # return img1
+
+
+def masked_with_offsets(video, with_no_ofs=True):
+    """
+    Функция для доп. эффектов маски
+    :param video: клип для трансформации
+        :type video: class VideoClip
+    :param with_no_ofs: Флаг сдвига маски (True - вернуть и без сдига)
+        :type with_no_ofs: bool
+    :return: список клипов с преобразованной маской
+        :rtype list с VideoClip
+    """
+
+    gradient = color_gradient(video.size,
+                              p1=(0, 500), p2=(500, 1080),
+                              col1=[205, 120, 245], col2=[200, 125, 240],
+                              shape='linear')
+    gradient_mask = mvpy.ImageClip(gradient, transparent=True) \
+        .set_duration(video.duration) \
+        .set_pos(("center", "center")) \
+        .set_opacity(.25)
+
+    if not with_no_ofs:
+        gradient_mask.set_position(lambda t: ((2000 / video.duration * t), 'center'))
+
+    painting_video = (mvpy.CompositeVideoClip([video,
+                                               gradient_mask,
+                                               ])
+
+                      )
+
+    return painting_video
