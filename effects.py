@@ -60,7 +60,7 @@ def masked_with_offsets(video, with_no_ofs=True):
     """
 
     gradient = color_gradient(video.size,
-                              p1=(0, 500), p2=(500, 1080),
+                              p1=(0, 250), p2=(250, 125),
                               col1=[205, 120, 245], col2=[200, 125, 240],
                               shape='linear')
     gradient_mask = mvpy.ImageClip(gradient, transparent=True) \
@@ -68,13 +68,10 @@ def masked_with_offsets(video, with_no_ofs=True):
         .set_pos(("center", "center")) \
         .set_opacity(.25)
 
-    if not with_no_ofs:
-        gradient_mask.set_position(lambda t: ((2000 / video.duration * t), 'center'))
-
-    painting_video = (mvpy.CompositeVideoClip([video,
-                                               gradient_mask,
-                                               ])
-
-                      )
+    painting_video = (mvpy.CompositeVideoClip(
+        [video, gradient_mask
+            .set_position(lambda t: ([(0 + 250 / video.duration * t), 'center'][with_no_ofs], 'center')),
+         ])
+    )
 
     return painting_video

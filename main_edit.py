@@ -100,23 +100,29 @@ class VideoEdit:
             :type regions: list(ImageClip, ...)
         :return: список разделённых по секторам клипов
         """
-        mini_clip_1_ofs = masked_with_offsets(self.clips[1], with_no_ofs=False)
-        mini_clip_2_ofs = masked_with_offsets(self.clips[2], with_no_ofs=False)
-        mini_clip_3_ofs = masked_with_offsets(self.clips[3], with_no_ofs=False)
 
-        mini_clip_2 = masked_with_offsets(self.clips[2])
-        mini_clip_3 = masked_with_offsets(self.clips[3])
+        mini_clip_1_ofs = masked_with_offsets(self.clips[1].resize(regions[2].size).set_duration(10), with_no_ofs=False)
+        mini_clip_2_ofs = masked_with_offsets(self.clips[2].resize(regions[2].size), with_no_ofs=False)
+        mini_clip_3_ofs = masked_with_offsets(self.clips[3].resize(regions[2].size), with_no_ofs=False)
+
+        mini_clip_2 = masked_with_offsets(self.clips[2].resize(regions[2].size).set_duration(10))
+        mini_clip_3 = masked_with_offsets(self.clips[3].resize(regions[2].size))
 
         return [c.resize(r.size)
                     .set_mask(r.mask)
                     .set_pos(r.screenpos)
-                for c, r, in zip(
+                    .set_duration(c_dur)
+                    .set_start(c_st)
+                for c, r, (c_st, c_dur) in zip(
                 [mini_clip_1_ofs, mini_clip_2,
                  mini_clip_2_ofs, mini_clip_3,
                  mini_clip_3_ofs],
                 [regions[2], regions[1],
                  regions[2], regions[1],
-                 regions[2]]
+                 regions[2]],
+                [(0, 10), (0, 10),
+                 (10, 7), (10, 7),
+                 (17, 7)]
             )]
 
     def slices_videos(self, work_vid):
