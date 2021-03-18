@@ -32,7 +32,7 @@ TEXT_SCENARIOS = {
 
             'text_2': {
                 'font': 'AvantGarde-Bold',  # AvantGarde-Book
-                'fontsize': 250,
+                'fontsize': 800,
                 'color': 'grey',
                 'bg_clr': 'gray35',
                 'pos': ('left', 0.6),

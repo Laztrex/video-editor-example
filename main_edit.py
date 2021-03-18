@@ -86,12 +86,13 @@ class VideoEdit:
             painting = (video.subclip(tfreeze).fx(vfx.blackwhite))  # RGB='CRT_phosphor'
 
             painting_txt = (mvpy.CompositeVideoClip([painting,
+                                                     # .resize(height=sizes_screen[idx][1] * 4),
                                                      # .resize(lambda t: 1 + .01 * (3 - t)),
                                                      text[idx]
-                                                    .resize(height=sizes_screen[idx][1] * 4)
-                                                    .resize(lambda t: 1 + .045 * t)
-                                                    .set_pos('center')
-                                                    .resize(sizes_screen[idx])
+                                                    .resize(lambda t: (0.1 * t))
+                                                    .resize(lambda t: (1 + 0.05 * t))
+                                                     .set_pos('center')
+                                                     # .resize(sizes_screen[idx])
                                                      ])  # открытка
                             .add_mask()
                             )
