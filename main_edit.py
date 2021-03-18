@@ -29,16 +29,22 @@ class VideoEdit:
         """
         Запуск редактора (демонстрационный режим)
         """
-        for movie, cut in zip(self.input_videos, self.cuts):
+        for idx, (movie, cut) in enumerate(zip(self.input_videos, self.cuts)):
             clip = mvpy.VideoFileClip(movie, audio=False,
-                                      target_resolution=(1080, 1920)).subclip(
-                *cut)  # resize_algorithm='bicublin'
+                                      target_resolution=(1080, 1920)).subclip(*cut)  # resize_algorithm='bicublin'
+
+            if idx == 3:
+                texts = self.get_text(["Text 1", "Text 2", "Text 3"], "text_1", track=True)
+                clip_with_text = mvpy.CompositeVideoClip([clip, texts[0], texts[1], texts[2]]) \
+                    .set_duration(clip.duration) \
+                    .set_start(clip.start)
+                self.clips += [clip, clip_with_text]
+                continue
+
             self.clips.append(clip)
 
-        text = [self.get_text(text, mode) for text, mode in zip([t_sets['loc1'], t_sets['loc2']],
-                                                                ['text_2', 'text_2'])]
-
-        represent_video = mvpy.concatenate_videoclips(self.clips)
+        text = self.get_text([t_sets['loc1'], t_sets['loc2']], 'text_2')
+        represent_video = mvpy.concatenate_videoclips(self.clips[:-2])
 
         clips_slices = self.slices_videos(
             mvpy.CompositeVideoClip([represent_video,
@@ -55,7 +61,8 @@ class VideoEdit:
                                                   next(painting_fading),
                                                   next(clips_slices),
                                                   next(painting_fading),
-                                                  next(clips_slices)]
+                                                  next(clips_slices),
+                                                  self.clips[-1]]
                                                  )
 
         self.save_video(final_clip, self.save_title)
@@ -82,8 +89,8 @@ class VideoEdit:
                                                      # .resize(lambda t: 1 + .01 * (3 - t)),
                                                      text[idx]
                                                     .resize(height=sizes_screen[idx][1] * 4)
-                                                    .resize(lambda t: 1 + .008 * t)
-                                                    .set_position(('center', 'center'))
+                                                    .resize(lambda t: 1 + .045 * t)
+                                                    .set_pos('center')
                                                     .resize(sizes_screen[idx])
                                                      ])  # открытка
                             .add_mask()
@@ -92,6 +99,16 @@ class VideoEdit:
             yield mvpy.CompositeVideoClip([im_freeze, painting_txt]) \
                 .set_duration(2.5) \
                 .crossfadeout(0.3)
+
+    def slices_videos(self, work_vid):
+        """
+        Генератор подклипов для вставки динамических стоп-кадров (см. метод painting_gen)
+        :param work_vid: исходный клип
+            :type work_vid: class VideoClip
+        """
+        for x, y in zip([work_vid.start, self.tfreezes[0] + 2.5, self.tfreezes[1] + 2.5],
+                        [self.tfreezes[0], self.tfreezes[1], work_vid.end]):
+            yield work_vid.subclip(x, y)
 
     def compilations(self, regions):
         """
@@ -115,7 +132,7 @@ class VideoEdit:
                     .set_start(c_st)
                 for c, r, (c_st, c_dur) in zip(
                 [mini_clip_1_ofs, mini_clip_2,
-                 mini_clip_2_ofs, mini_clip_3,
+                 mini_clip_3, mini_clip_2_ofs,
                  mini_clip_3_ofs],
                 [regions[2], regions[1],
                  regions[2], regions[1],
@@ -125,43 +142,40 @@ class VideoEdit:
                  (17, 7)]
             )]
 
-    def slices_videos(self, work_vid):
-        """
-        Генератор подклипов для вставки динамических стоп-кадров (см. метод painting_gen)
-        :param work_vid: исходный клип
-            :type work_vid: class VideoClip
-        """
-        for x, y in zip([work_vid.start, self.tfreezes[0] + 3, self.tfreezes[1] + 3],
-                        [self.tfreezes[0], self.tfreezes[1], work_vid.end]):
-            yield work_vid.subclip(x, y)
-
-    def get_text(self, text, mode, track=False):
+    def get_text(self, texts, mode, track=False):
         """
         Метод создаёт текстовый клип
-        :param text: строка текста для записи
-            :type text: str
-        :param mode: признак сетки параметров для текстового клипа (из settings.TEXT_SCENARIOS)
+        :param texts: Список строк текста для записи
+            :type texts: list
+        :param mode: Признак сетки параметров для текстового клипа (из settings.TEXT_SCENARIOS)
             :type mode: str
-        :param track: флаг для создания динамического текста. Параметры движения задаются в текстовом файле
+        :param track: Флаг для создания динамического текста. Параметры движения задаются в текстовом файле
         (см. settings.TEXT_SCENARIOS)
             :type track: bool
-        :return: текстовый клип
+        :return: Текстовый клип
             :rtype class TextClip
         """
-        text = mvpy.TextClip(text,
-                             font=t_sets['sets'][mode]['font'],
-                             fontsize=t_sets['sets'][mode]['fontsize'],
-                             color=t_sets['sets'][mode]['color'],
-                             stroke_color=t_sets['sets'][mode]['bg_clr'],
-                             kerning=t_sets['sets'][mode]['kerning']
-                             # bg_color=t_sets[mark]['bg_clr']
-                             )
-        if track:
-            traj = Trajectory.load_list(t_sets['sets'][mode]['tracking'])
-            for i in traj[:1]:
-                text = text.set_position(i)
+        gettings_trajectory = None
+        total_texts = []
+        for num_text, label in enumerate(texts):
+            text = mvpy.TextClip(label,
+                                 font=t_sets['sets'][mode]['font'],
+                                 fontsize=t_sets['sets'][mode]['fontsize'],
+                                 color=t_sets['sets'][mode]['color'],
+                                 stroke_color=t_sets['sets'][mode]['bg_clr'],
+                                 kerning=t_sets['sets'][mode]['kerning']
+                                 )
 
-        return text
+            if track:
+
+                if gettings_trajectory is None:
+                    traj = Trajectory.load_list(t_sets['sets'][mode]['tracking'])
+                    gettings_trajectory = traj[:len(texts)]
+
+                text = text.set_position(gettings_trajectory[num_text])
+
+            total_texts.append(text)
+        return total_texts
 
     def add_text_background(self, text):
         """
@@ -224,6 +238,5 @@ if __name__ == '__main__':
                        savetitle=title,
                        cuts=timings)
     editor.run()
-# TODO: прямоугольник вокруг врезанных видео исчезающий
 # TODO: звукорежиссёрить
 # TODO: resize_algorithms

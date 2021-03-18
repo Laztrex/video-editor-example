@@ -21,12 +21,13 @@ TEXT_SCENARIOS = {
             'color': 'grey',
             'bg_clr': 'gray35',
             'pos': ('center', 0.6),
-            'start': (0, 1),
-            'end': (0, 6.958),
+            # 'start': (0, 1),
+            # 'end': (0, 6.958),
             'fadein': 0.3,
             'fadeout': 0.3,
+            'kerning': 2,
 
-            'tracking': 'files/tracking/river.txt'
+            'tracking': 'files/tracking/end_titre.txt'
         },
 
             'text_2': {
@@ -39,79 +40,79 @@ TEXT_SCENARIOS = {
                 'end': (0, 9.999),
                 'fadeout': 0.2,
                 'kerning': 5,
+            },
 
-                'tracking': 'files/tracking/towers.txt'
-            }
-        },
+            'text_3': {
+                'font': 'Amiri-regular',  # AvantGarde-Book
+                'fontsize': 30,
+                'color': 'grey',
+                'bg_clr': 'gray35',
+                'pos': ('left', 0.6),
+                # 'start': (0, 6),
+                # 'end': (0, 9.999),
+                'fadein': 0.3,
+                'fadeout': 0.3,
+                'kerning': 2,
+
+                'tracking': 'files/tracking/end_titre.txt'
+            },
+
+            'text_4': {
+                'font': 'Amiri-regular',  # AvantGarde-Book
+                'fontsize': 30,
+                'color': 'grey',
+                'bg_clr': 'gray35',
+                'pos': ('left', 0.6),
+                # 'start': (0, 6),
+                # 'end': (0, 9.999),
+                'fadein': 0.3,
+                'fadeout': 0.3,
+                'kerning': 2,
+
+                'tracking': 'files/tracking/end_titre.txt'
+            },
+        }
 }
 
-# from moviepy.video.tools.tracking import manual_tracking, Trajectory
-# trajectories = manual_tracking(clip, t1=1, t2=7,
-#                                nobjects=1, savefile="track.txt")
-# trajectories = manual_tracking(clip, t1=7, t2=10,
-#                                nobjects=1, savefile="track2.txt")
+# from moviepy.video.tools.tracking import manual_tracking
+# import moviepy.editor as mvpy
 
-# with open("files/tracking/towers.txt", 'r') as file:
-#     with open("files/tracking/towers_3.txt", 'w') as wr:
-#         for i in file.readlines()[1:]:
-#             l = [int(a) for a in i.split()]
-#             for m in l:
-#                 u.append(m)
-#                 u.append('	')
-#             u.append(l[0])
-#             u.append('	')
-#             u.append(l[1] - 50)
-#             u.append('	')
-#             u.append(l[2])
-#             wr.writelines([str(m) for m in u])
-#             wr.write('\n')
-#             u.clear()
+# coor = {1: [], 2: [], 3: []}
 
+# def get_line(x, y, k):
+#     start = 2000
+#     for i in range(x, x + 4000, 1):
+#         start += 10
+#         if start > 6500:
+#             break
+#         yield start, i, k * i + y
+#
+#
+# total_1 = []
+# total_2 = []
+# total_3 = []
+#
+# with open("files/tracking/track.txt", 'r') as file:
+#     with open("files/tracking/end_titre.txt", 'w') as file_write:
+#         for idx, i in enumerate(file.readlines()[1:]):
+#             print(i)
+#             if idx < 2:
+#                 coor[1].append(i.split())
+#             elif 4 > idx >= 2:
+#                 coor[2].append(i.split())
+#             else:
+#                 coor[3].append(i.split())
+#
+#             coors_1 = get_line(1188, 288, 0.0777)
+#             coors_2 = get_line(725, 653, -0.486)
+#             coors_3 = get_line(680, 520, -0.25)
+#
+#             total_1 = [i for i in coors_1]
+#             total_2 = [i for i in coors_2]
+#             total_3 = [i for i in coors_3]
+#
+#             file_write.writelines([str(i[0][0]) + '	' + str(i[0][1]) + '	' + str(i[0][2]) + '	'
+#                                    + str(i[1][0]) + '	' + str(i[1][1]) + '	' + str(i[1][2]) +
+#                                    '	' + str(i[2][0]) + '	' + str(i[2][1]) + '	' + str(i[2][2]) + '\n'
+#                                    for i in zip(total_1, total_2, total_3)])
 
-# a1 = []
-# a2 = []
-# temp_a = []
-# temp_a2 = []
-# temp_b = []
-# temp_e = []
-# temp_c = []
-# temp_f = []
-#
-# finish = []
-# import numpy as np
-#
-# with open("files/tracking/river.txt", 'r') as file:
-#     for i in file.readlines()[1:]:
-#         a, b, c, d, e, f = i.split()
-#         a1.append(a)
-#         a2.append(d)
-#         if int(a) < 2999:
-#             for dx, i in enumerate([a, b, c, d, e, f]):
-#                 finish.append(i)
-#                 if dx != 5:
-#                     finish.append('	')
-#             finish.append('\n')
-#         else:
-#             temp_a.append(a)
-#             temp_a2.append(d)
-#             temp_b.append(int(b))
-#             temp_e.append(int(e))
-#             temp_c.append(int(c) + 400)
-#             temp_f.append(int(f))
-#
-#     b1 = np.linspace(start=max(temp_b), stop=min(temp_b), num=len(temp_b), dtype=int)
-#     c1 = np.linspace(start=min(temp_c), stop=max(temp_c), num=len(temp_c), dtype=int)
-#
-#     for j in range(len(b1)):
-#         finish.append(temp_a[j])
-#         finish.append('	')
-#         finish.append(b1[j])
-#         finish.append('	')
-#         finish.append(c1[j])
-#         finish.append('	')
-#         finish.append(temp_a2[j])
-#         finish.append('	')
-#         finish.append(b1[j] - 150)
-#         finish.append('	')
-#         finish.append(c1[j])
-#         finish.append('\n')
