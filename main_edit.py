@@ -54,8 +54,7 @@ class VideoEdit:
         )
 
         painting_fading = self.painting_gen(video=represent_video,
-                                            text=text,
-                                            sizes_screen=[text[0].size, text[1].size])
+                                            text=text)
 
         final_clip = mvpy.concatenate_videoclips([next(clips_slices),
                                                   next(painting_fading),
@@ -70,15 +69,13 @@ class VideoEdit:
         for v in self.clips:
             v.close()
 
-    def painting_gen(self, video, text, sizes_screen):
+    def painting_gen(self, video, text):
         """
         Генератор составных стилизованных стоп-кадров (+ здесь эффекта зума)
         :param video: видеофайл, откуда берутся стоп-кадры
             :type video: class VideoClip
         :param text: текст поверх кадра
             :type text: class TextClip
-        :param sizes_screen: размеры исходного текстового клипа (TextClip от метода get_text)
-            :type sizes_screen: list
         :return:
         """
         for idx, tfreeze in enumerate(self.tfreezes):
@@ -86,14 +83,11 @@ class VideoEdit:
             painting = (video.subclip(tfreeze).fx(vfx.blackwhite))  # RGB='CRT_phosphor'
 
             painting_txt = (mvpy.CompositeVideoClip([painting,
-                                                     # .resize(height=sizes_screen[idx][1] * 4),
-                                                     # .resize(lambda t: 1 + .01 * (3 - t)),
                                                      text[idx]
-                                                    .resize(lambda t: (0.1 * t))
-                                                    .resize(lambda t: (1 + 0.05 * t))
+                                                     .resize(lambda t: (0.5 + 0.01 * t))
+                                                     .resize(lambda t: (0.5 + 0.01 * t))
                                                      .set_pos('center')
-                                                     # .resize(sizes_screen[idx])
-                                                     ])  # открытка
+                                                     ])
                             .add_mask()
                             )
 
@@ -120,8 +114,8 @@ class VideoEdit:
         """
 
         mini_clip_1_ofs = masked_with_offsets(self.clips[1].resize(regions[2].size).set_duration(10), with_no_ofs=False)
-        mini_clip_2_ofs = masked_with_offsets(self.clips[2].resize(regions[2].size), with_no_ofs=False)
-        mini_clip_3_ofs = masked_with_offsets(self.clips[3].resize(regions[2].size), with_no_ofs=False)
+        mini_clip_2_ofs = masked_with_offsets(self.clips[2].resize(regions[2].size), speed_ofs=1.42, with_no_ofs=False)
+        mini_clip_3_ofs = masked_with_offsets(self.clips[3].resize(regions[2].size), speed_ofs=1.42, with_no_ofs=False)
 
         mini_clip_2 = masked_with_offsets(self.clips[2].resize(regions[2].size).set_duration(10))
         mini_clip_3 = masked_with_offsets(self.clips[3].resize(regions[2].size))

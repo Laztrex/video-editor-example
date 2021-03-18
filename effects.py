@@ -48,11 +48,13 @@ def mask_img(img1, flag=True):
     # return img1
 
 
-def masked_with_offsets(video, with_no_ofs=True):
+def masked_with_offsets(video, speed_ofs=1, with_no_ofs=True):
     """
     Функция для доп. эффектов маски
     :param video: клип для трансформации
         :type video: class VideoClip
+    :param speed_ofs: Скорость маски сдвига
+        :type speed_ofs: float
     :param with_no_ofs: Флаг сдвига маски (True - вернуть и без сдига)
         :type with_no_ofs: bool
     :return: список клипов с преобразованной маской
@@ -61,7 +63,7 @@ def masked_with_offsets(video, with_no_ofs=True):
 
     gradient = color_gradient(video.size,
                               p1=(0, 250), p2=(250, 125),
-                              col1=[205, 120, 245], col2=[200, 125, 240],
+                              col1=[225, 129, 255], col2=[225, 129, 255],
                               shape='linear')
     gradient_mask = mvpy.ImageClip(gradient, transparent=True) \
         .set_duration(video.duration) \
@@ -70,7 +72,7 @@ def masked_with_offsets(video, with_no_ofs=True):
 
     painting_video = (mvpy.CompositeVideoClip(
         [video, gradient_mask
-            .set_position(lambda t: ([(0 + 250 / video.duration * t), 'center'][with_no_ofs], 'center')),
+            .set_position(lambda t: ([(0 + speed_ofs * 25 * t), 'center'][with_no_ofs], 'center')),
          ])
     )
 
