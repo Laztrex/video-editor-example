@@ -1,7 +1,9 @@
 import cv2
+import numpy as np
 
 import moviepy.editor as mvpy
 from moviepy.video.tools.drawing import color_gradient
+from moviepy.video.tools.tracking import manual_tracking
 
 
 def mask_img(img1, flag=True):
@@ -77,3 +79,30 @@ def masked_with_offsets(video, speed_ofs=1, with_no_ofs=True):
     )
 
     return painting_video
+
+
+def set_tracking():
+    def get_line(x, y, k, step):
+        start = 2000
+        cs = np.linspace(x[0], x[1], step)
+        for i in cs:
+            start += 5
+            if start < 9001:
+                yield start, i, k * i + y
+            else:
+                break
+
+    with open("files/tracking/track.txt", 'r') as file:
+        with open("files/tracking/end_titre.txt", 'w') as file_write:
+            coors_1 = get_line((1188, 1500), 970, -0.486, 2000)
+            coors_2 = get_line((680, 1150), 685, -0.25, 14000)
+            coors_3 = get_line((700, 275), 720, -0.486, 7000)
+
+            total_1 = [i for i in coors_1]
+            total_2 = [i for i in coors_2]
+            total_3 = [i for i in coors_3]
+
+            file_write.writelines([str(i[0][0]) + '	' + str(i[0][1]) + '	' + str(i[0][2]) + '	'
+                                   + str(i[1][0]) + '	' + str(i[1][1]) + '	' + str(i[1][2]) +
+                                   '	' + str(i[2][0]) + '	' + str(i[2][1]) + '	' + str(i[2][2]) + '\n'
+                                   for i in zip(total_1, total_2, total_3)])

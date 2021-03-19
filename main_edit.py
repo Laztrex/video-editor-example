@@ -13,14 +13,14 @@ from settings import TEXT_SCENARIOS as t_sets
 
 class VideoEdit:
     """
-    v. Python 3.7.5
+    Python 3.7.5
 
     Класс редактирования видео (демонстрация)
     """
 
     def __init__(self, input_videos, savetitle, cuts):
         self.clips = []
-        self.tfreezes = [mvpy.cvsecs(12.10), mvpy.cvsecs(19.10)]
+        self.tfreezes = [mvpy.cvsecs(12.0), mvpy.cvsecs(19.0)]
         self.input_videos = input_videos
         self.cuts = cuts
         self.save_title = savetitle
@@ -210,6 +210,14 @@ class VideoEdit:
                              preset=v_sets['sets']['compression'],
                              ffmpeg_params=["-crf", v_sets['sets']['vquality']],
                              remove_temp=True)
+
+        # clip = mvpy.VideoFileClip("media/save/IMG_0039.mp4", audio=False,
+        #                           target_resolution=(1050, 1400))
+        # clip.write_videofile("media/save/IMG_0039_1.mp4", threads=8, fps=24,
+        #                      codec=v_sets['sets']['vcodec'],
+        #                      preset=v_sets['sets']['compression'],
+        #                      ffmpeg_params=["-crf", v_sets['sets']['vquality']],
+        #                      remove_temp=True)
 
 
 if __name__ == '__main__':
