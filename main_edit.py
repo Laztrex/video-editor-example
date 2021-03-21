@@ -20,7 +20,7 @@ class VideoEdit:
 
     def __init__(self, input_videos, savetitle, cuts):
         self.clips = []
-        self.tfreezes = [mvpy.cvsecs(12.0), mvpy.cvsecs(19.0)]
+        self.tfreezes = [mvpy.cvsecs(40.5), mvpy.cvsecs(83)]
         self.input_videos = input_videos
         self.cuts = cuts
         self.save_title = savetitle
@@ -29,14 +29,44 @@ class VideoEdit:
         """
         Запуск редактора (демонстрационный режим)
         """
+        images_seq = []
+        path_img = v_sets['sets']['dir_load']
+        for img in [path_img + "1.jpg", path_img + "2.jpeg", path_img + "3.jpeg", path_img + "4.png",
+                    path_img + "5.jpeg"]:
+            images_seq.append(mvpy.ImageClip(img, duration=5).fadein(1).fadeout(1))
+        # imgs = mvpy.ImageSequenceClip([path_img + "1.jpg", path_img + "2.jpeg", path_img + "3.jpeg"],
+        #                               durations=[5, 5, 5])\
+        #     .fadein(1)\
+        #     .fadeout(1)
+        # self.clips.append(mvpy.concatenate_videoclips(images_seq))
+        first = mvpy.VideoFileClip(self.input_videos[0], audio=False,
+                                   target_resolution=(1080, 1920)).subclip('00:00:00.00', '00:00:08.45')
+        self.clips.append(mvpy.CompositeVideoClip([first.speedx(.5),
+                                                   mvpy.concatenate_videoclips(images_seq)
+                                                  .resize(.7)
+                                                  .set_pos(('center', 'center'))]))
+
         for idx, (movie, cut) in enumerate(zip(self.input_videos, self.cuts)):
             clip = mvpy.VideoFileClip(movie, audio=False,
                                       target_resolution=(1080, 1920)).subclip(*cut)  # resize_algorithm='bicublin'
-
-            if idx == 3:
-                texts = self.get_text(["Text 1", "Text 2", "Text 3"], "text_1", track=True)
-                clip_with_text = mvpy.CompositeVideoClip([clip, texts[0], texts[1], texts[2]]) \
-                    .set_duration(clip.duration) \
+            if idx == 0:
+                clip = clip.fx(vfx.fadeout, 2)
+            if idx == 8:
+                texts = self.get_text(["good day", "loc: Moscow", "made in MoviePy"], "text_1", track=True)
+                clip_with_text = mvpy.CompositeVideoClip([clip
+                                                          # .resize((clip.size[0] * 2, clip.size[1] * 2))
+                                                             ,
+                                                          texts[0]
+                                                          # .resize((texts[0].size[0] * 2, texts[0].size[1] * 2))
+                                                             ,
+                                                          texts[1]
+                                                          # .resize((texts[1].size[0] * 2, texts[1].size[1] * 2))
+                                                             ,
+                                                          texts[2]
+                                                          # .resize(
+                                                          #      (texts[2].size[0] * 2, texts[2].size[1] * 2))
+                                                          ]) \
+                    .resize(clip.size) \
                     .set_start(clip.start)
                 self.clips += [clip, clip_with_text]
                 continue
@@ -44,25 +74,28 @@ class VideoEdit:
             self.clips.append(clip)
 
         text = self.get_text([t_sets['loc1'], t_sets['loc2']], 'text_2')
-        represent_video = mvpy.concatenate_videoclips(self.clips[:-2])
+
+        represent_video = mvpy.concatenate_videoclips(self.clips[1:-2])
 
         clips_slices = self.slices_videos(
             mvpy.CompositeVideoClip([represent_video,
-                                     *self.compilations(
-                                         self.get_regions()
-                                     )])
+                                     *self.compilations(self.clips[5:-1],
+                                                        self.get_regions()
+                                                        )])
         )
 
         painting_fading = self.painting_gen(video=represent_video,
                                             text=text)
 
-        final_clip = mvpy.concatenate_videoclips([next(clips_slices),
-                                                  next(painting_fading),
-                                                  next(clips_slices),
-                                                  next(painting_fading),
-                                                  next(clips_slices),
-                                                  self.clips[-1]]
-                                                 )
+        final_clip = mvpy.concatenate_videoclips([
+            self.clips[0],
+            next(clips_slices),
+            next(painting_fading),
+            next(clips_slices),
+            next(painting_fading),
+            next(clips_slices),
+            self.clips[-1]]
+        )
 
         self.save_video(final_clip, self.save_title)
 
@@ -84,9 +117,9 @@ class VideoEdit:
 
             painting_txt = (mvpy.CompositeVideoClip([painting,
                                                      text[idx]
-                                                     .resize(lambda t: (0.5 + 0.01 * t))
-                                                     .resize(lambda t: (0.5 + 0.01 * t))
-                                                     .set_pos('center')
+                                                    .resize(lambda t: (0.5 + 0.01 * t))
+                                                    .resize(lambda t: (0.5 + 0.01 * t))
+                                                    .set_pos('center')
                                                      ])
                             .add_mask()
                             )
@@ -105,7 +138,7 @@ class VideoEdit:
                         [self.tfreezes[0], self.tfreezes[1], work_vid.end]):
             yield work_vid.subclip(x, y)
 
-    def compilations(self, regions):
+    def compilations(self, videos, regions):
         """
         Метод для генерирования набора видео для врезки в форму (см. метод get_regions)
         :param regions: координаты секторов для встраивания видео в форму
@@ -113,28 +146,42 @@ class VideoEdit:
         :return: список разделённых по секторам клипов
         """
 
-        mini_clip_1_ofs = masked_with_offsets(self.clips[1].resize(regions[2].size).set_duration(10), with_no_ofs=False)
-        mini_clip_2_ofs = masked_with_offsets(self.clips[2].resize(regions[2].size), speed_ofs=1.42, with_no_ofs=False)
-        mini_clip_3_ofs = masked_with_offsets(self.clips[3].resize(regions[2].size), speed_ofs=1.42, with_no_ofs=False)
+        mini_clip_1_ofs = masked_with_offsets(videos[0].resize(regions[2].size).set_duration(11), speed_ofs=0.9,
+                                              with_no_ofs=False)
+        mini_clip_2_ofs = masked_with_offsets(videos[1].resize(regions[2].size),
+                                              with_no_ofs=False)
+        mini_clip_3_ofs = masked_with_offsets(videos[2].resize(regions[2].size).set_duration(10), with_no_ofs=False)
+        mini_clip_4_ofs = masked_with_offsets(videos[3].resize(regions[2].size), speed_ofs=1.42,
+                                              with_no_ofs=False)
+        mini_clip_5_ofs = masked_with_offsets(videos[4].resize(regions[2].size), speed_ofs=1.42, with_no_ofs=False)
 
-        mini_clip_2 = masked_with_offsets(self.clips[2].resize(regions[2].size).set_duration(10))
-        mini_clip_3 = masked_with_offsets(self.clips[3].resize(regions[2].size))
+        mini_clip_2 = masked_with_offsets(videos[1].resize(regions[2].size).set_duration(11))
+        mini_clip_3 = masked_with_offsets(videos[2].resize(regions[2].size).set_duration(10))
+        mini_clip_4 = masked_with_offsets(videos[3].resize(regions[2].size).set_duration(10))
+        mini_clip_5 = masked_with_offsets(videos[4].resize(regions[2].size))
 
         return [c.resize(r.size)
                     .set_mask(r.mask)
                     .set_pos(r.screenpos)
                     .set_duration(c_dur)
                     .set_start(c_st)
+
                 for c, r, (c_st, c_dur) in zip(
-                [mini_clip_1_ofs, mini_clip_2,
+                [mini_clip_1_ofs.fx(vfx.blink, 1, 0.2), mini_clip_2.fx(vfx.blink, 1, 0.2),
                  mini_clip_3, mini_clip_2_ofs,
-                 mini_clip_3_ofs],
+                 mini_clip_3_ofs, mini_clip_4,
+                 mini_clip_5, mini_clip_4_ofs,
+                 mini_clip_5_ofs],
                 [regions[2], regions[1],
                  regions[2], regions[1],
+                 regions[2], regions[1],
+                 regions[2], regions[1],
                  regions[2]],
-                [(0, 10), (0, 10),
-                 (10, 7), (10, 7),
-                 (17, 7)]
+                [(35, 11), (35, 11),
+                 (46, 10), (46, 10),
+                 (56, 10), (56, 10),
+                 (66, 7), (66, 7),
+                 (80, 7)]
             )]
 
     def get_text(self, texts, mode, track=False):
@@ -169,6 +216,9 @@ class VideoEdit:
 
                 text = text.set_position(gettings_trajectory[num_text])
 
+                text = text.set_duration(8)
+                # text = text.crossfadein(1)
+                text = text.crossfadeout(1)
             total_texts.append(text)
         return total_texts
 
@@ -208,32 +258,30 @@ class VideoEdit:
         clip.write_videofile(savetitle, threads=8, fps=24,
                              codec=v_sets['sets']['vcodec'],
                              preset=v_sets['sets']['compression'],
-                             ffmpeg_params=["-crf", v_sets['sets']['vquality']],
+                             ffmpeg_params=["-c:a", "copy", "-c:v", "libx264", "-crf", "0"],
                              remove_temp=True)
-
-        # clip = mvpy.VideoFileClip("media/save/IMG_0039.mp4", audio=False,
-        #                           target_resolution=(1050, 1400))
-        # clip.write_videofile("media/save/IMG_0039_1.mp4", threads=8, fps=24,
-        #                      codec=v_sets['sets']['vcodec'],
-        #                      preset=v_sets['sets']['compression'],
-        #                      ffmpeg_params=["-crf", v_sets['sets']['vquality']],
-        #                      remove_temp=True)
 
 
 if __name__ == '__main__':
     inputs = []
-    for movie, ext, num in zip(['IMG_0833', 'IMG_0041', 'IMG_0040', 'IMG_0042'],
-                               ['.MP4', '.mp4', '.mp4', '.mp4'],
-                               [1, 1, 1, 1]):
+    for movie, num in zip(['IMG_0043.mp4', 'IMG_0037.mp4', 'IMG_0039.mp4', 'IMG_0045.mp4', 'IMG_0833.MP4',
+                           'IMG_0044.mp4', 'IMG_0041.mp4', 'IMG_0050.mp4', 'IMG_0040.mp4', 'IMG_0042.mp4'],
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]):
         title_open = v_sets['sets']['dir_load'] + movie
-        loadtitle = [title_open + ext] * num
+        loadtitle = [title_open] * num
         inputs += loadtitle
 
     title_save = v_sets['sets']['dir_save'] + 'IMG_0039'
     title = title_save + v_sets['sets']['save_ext']
 
-    timings = [('00:00:07.00', '00:00:17.00'),
+    timings = [('00:00:00.00', '00:00:08.45'),
+               ('00:00:00.00', '00:00:10.00'),
+               ('00:00:00.00', '00:00:10.00'),
+               ('00:00:00.45', '00:00:18.00'),
+               ('00:00:07.00', '00:00:17.00'),
+               ('00:00:00.00', '00:00:10.00'),
                ('00:00:42.00', '00:00:49.00'),
+               ('00:00:00.00', '00:00:07.00'),
                ('00:00:03.00', '00:00:10.00'),
                ('00:00:02.00', '00:00:12.00')]
 

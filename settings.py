@@ -1,7 +1,7 @@
 VIDEO_SCENARIOS = {
     'sets': {
         'vcodec': "libx264",
-        'vquality': "5",
+        'vquality': "1",
         'compression': "ultrafast",  # ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
         'dir_load': "media/load/",
         'dir_save': "media/save/",
@@ -19,13 +19,13 @@ TEXT_SCENARIOS = {
             'font': 'Amiri-regular',
             'fontsize': 20,
             'color': 'grey',
-            'bg_clr': 'gray35',
+            'bg_clr': 'grey',
             'pos': ('center', 0.6),
             # 'start': (0, 1),
             # 'end': (0, 6.958),
             'fadein': 0.3,
             'fadeout': 0.3,
-            'kerning': 2,
+            'kerning': 1,
 
             'tracking': 'files/tracking/end_titre.txt'
         },
@@ -44,30 +44,30 @@ TEXT_SCENARIOS = {
 
             'text_3': {
                 'font': 'Amiri-regular',  # AvantGarde-Book
-                'fontsize': 30,
+                'fontsize': 20,
                 'color': 'grey',
-                'bg_clr': 'gray35',
+                'bg_clr': 'grey',
                 'pos': ('left', 0.6),
                 # 'start': (0, 6),
                 # 'end': (0, 9.999),
                 'fadein': 0.3,
                 'fadeout': 0.3,
-                'kerning': 2,
+                'kerning': 1,
 
                 'tracking': 'files/tracking/end_titre.txt'
             },
 
             'text_4': {
                 'font': 'Amiri-regular',  # AvantGarde-Book
-                'fontsize': 30,
+                'fontsize': 20,
                 'color': 'grey',
-                'bg_clr': 'gray35',
+                'bg_clr': 'grey',
                 'pos': ('left', 0.6),
                 # 'start': (0, 6),
                 # 'end': (0, 9.999),
                 'fadein': 0.3,
                 'fadeout': 0.3,
-                'kerning': 2,
+                'kerning': 1,
 
                 'tracking': 'files/tracking/end_titre.txt'
             },
