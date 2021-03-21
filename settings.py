@@ -8,6 +8,11 @@ VIDEO_SCENARIOS = {
         'load_ext': ".mov",
         'save_ext': '.mp4',
     },
+
+    'img_list':
+        ["media/load/1.jpg", "media/load/2.jpeg", "media/load/3.jpeg",
+         "media/load/4.png", "media/load/5.jpeg", "media/load/6.jpeg"]
+
 }
 
 TEXT_SCENARIOS = {
