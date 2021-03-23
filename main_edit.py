@@ -62,12 +62,25 @@ class VideoEdit:
         self.load_videos()
 
         represent_video = mvpy.concatenate_videoclips(self.clips[1:-2])
+        precompiling_clips = self.compilations(self.clips[5:-1], self.get_regions())
+
+        text_clip_1 = mvpy.TextClip("Loading...", fontsize=10).set_duration(5)\
+            .set_position((1800, 100)).set_start(30)
+        text_clip_2 = mvpy.TextClip("Loading...", fontsize=10).set_duration(5)\
+            .set_position((1800, 200)).set_start(30)
+
+        before1 = precompiling_clips[0].subclip(0, 5).fx(vfx.blink, .5, .5)
+        before2 = precompiling_clips[1].subclip(0, 5).fx(vfx.blink, .5, .5)
+        after1 = precompiling_clips[0].subclip(5).set_start(40)
+        after2 = precompiling_clips[0].subclip(5).set_start(40)
+
+        compiling_clips = [text_clip_1, text_clip_2,
+                           before1, before2,
+                           after1, after2,
+                           *precompiling_clips[2:]]
 
         clips_slices = self.slices_videos(
-            self.compositing_videos([represent_video,
-                                     *self.compilations(self.clips[5:-1],
-                                                        self.get_regions()
-                                                        )])
+            self.compositing_videos([represent_video, *compiling_clips])
         )
 
         painting_fading = self.painting_gen(video=represent_video,
@@ -97,17 +110,17 @@ class VideoEdit:
             if idx == 9:
                 texts = self.get_text(["good day", "loc: Moscow", "made in MoviePy"], "text_1", track=True)
                 clip_with_text = self.compositing_videos([clip
-                                                         .resize((clip.size[0] * 2, clip.size[1] * 2))
+                                                         # .resize((clip.size[0] * 2, clip.size[1] * 2))
                                                              ,
                                                           texts[0]
-                                                         .resize((texts[0].size[0] * 2, texts[0].size[1] * 2))
+                                                         # .resize((texts[0].size[0] * 2, texts[0].size[1] * 2))
                                                              ,
                                                           texts[1]
-                                                         .resize((texts[1].size[0] * 2, texts[1].size[1] * 2))
+                                                         # .resize((texts[1].size[0] * 2, texts[1].size[1] * 2))
                                                              ,
                                                           texts[2]
-                                                         .resize(
-                                                              (texts[2].size[0] * 2, texts[2].size[1] * 2))
+                                                         # .resize(
+                                                         #      (texts[2].size[0] * 2, texts[2].size[1] * 2))
                                                           ]) \
                     .resize(clip.size) \
                     .set_start(clip.start)
@@ -177,7 +190,7 @@ class VideoEdit:
                     .set_start(c_st)
 
                 for c, r, (c_st, c_dur) in zip(
-                [mini_clip_1_ofs.fx(vfx.blink, 1, 0.2), mini_clip_2.fx(vfx.blink, 1, 0.2),
+                [mini_clip_1_ofs, mini_clip_2.fx(vfx.blink, .5, .5),
                  mini_clip_3, mini_clip_2_ofs,
                  mini_clip_3_ofs],
                 [regions[2], regions[1],
