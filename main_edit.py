@@ -65,14 +65,14 @@ class VideoEdit:
         precompiling_clips = self.compilations(self.clips[5:-1], self.get_regions())
 
         text_clip_1 = mvpy.TextClip("Loading...", fontsize=10).set_duration(5)\
-            .set_position((1800, 100)).set_start(30)
+            .set_position((1800, 100)).set_start(35)
         text_clip_2 = mvpy.TextClip("Loading...", fontsize=10).set_duration(5)\
-            .set_position((1800, 200)).set_start(30)
+            .set_position((1800, 200)).set_start(35)
 
         before1 = precompiling_clips[0].subclip(0, 5).fx(vfx.blink, .5, .5)
         before2 = precompiling_clips[1].subclip(0, 5).fx(vfx.blink, .5, .5)
         after1 = precompiling_clips[0].subclip(5).set_start(40)
-        after2 = precompiling_clips[0].subclip(5).set_start(40)
+        after2 = precompiling_clips[1].subclip(5).set_start(40)
 
         compiling_clips = [text_clip_1, text_clip_2,
                            before1, before2,
