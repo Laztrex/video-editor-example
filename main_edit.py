@@ -64,19 +64,19 @@ class VideoEdit:
         represent_video = mvpy.concatenate_videoclips(self.clips[1:-2])
         precompiling_clips = self.compilations(self.clips[5:-1], self.get_regions())
 
-        text_clip_1 = mvpy.TextClip("Loading...", fontsize=10).set_duration(5)\
-            .set_position((1800, 100)).set_start(35)
-        text_clip_2 = mvpy.TextClip("Loading...", fontsize=10).set_duration(5)\
-            .set_position((1800, 200)).set_start(35)
+        text_clip_1, text_clip_2 = self.get_text(["Loading...", "Loading..."], **t_sets['sets']['loading'])
 
-        before1 = precompiling_clips[0].subclip(0, 5).fx(vfx.blink, .5, .5)
-        before2 = precompiling_clips[1].subclip(0, 5).fx(vfx.blink, .5, .5)
-        after1 = precompiling_clips[0].subclip(5).set_start(40)
-        after2 = precompiling_clips[1].subclip(5).set_start(40)
+        loading_effect = self.loading_imit(precompiling_clips[0], precompiling_clips[1])
 
-        compiling_clips = [text_clip_1, text_clip_2,
-                           before1, before2,
-                           after1, after2,
+        compiling_clips = [text_clip_1
+                               .set_duration(3)
+                               .set_position((1720, 80))
+                               .set_start(33),
+                           text_clip_2
+                               .set_duration(3)
+                               .set_position((1720, 230))
+                               .set_start(33),
+                           *loading_effect,
                            *precompiling_clips[2:]]
 
         clips_slices = self.slices_videos(
@@ -84,7 +84,9 @@ class VideoEdit:
         )
 
         painting_fading = self.painting_gen(video=represent_video,
-                                            text=self.get_text([t_sets['loc1'], t_sets['loc2']], 'text_2'))
+                                            text=self.get_text([t_sets['loc1'], t_sets['loc2']],
+                                                               **t_sets['sets']['zoom_city']
+                                                               ))
 
         final_clip = mvpy.concatenate_videoclips([
             self.clips[0],
@@ -108,19 +110,21 @@ class VideoEdit:
             if idx == 0:
                 clip = clip.fx(vfx.fadeout, 2)
             if idx == 9:
-                texts = self.get_text(["good day", "loc: Moscow", "made in MoviePy"], "text_1", track=True)
+                texts = self.get_text(["good day", "loc: Moscow", "made in MoviePy"],
+                                      track=True, **t_sets['sets']['titre'],
+                                      )
                 clip_with_text = self.compositing_videos([clip
-                                                         # .resize((clip.size[0] * 2, clip.size[1] * 2))
+                                                          # .resize((clip.size[0] * 2, clip.size[1] * 2))
                                                              ,
                                                           texts[0]
-                                                         # .resize((texts[0].size[0] * 2, texts[0].size[1] * 2))
+                                                          # .resize((texts[0].size[0] * 2, texts[0].size[1] * 2))
                                                              ,
                                                           texts[1]
-                                                         # .resize((texts[1].size[0] * 2, texts[1].size[1] * 2))
+                                                          # .resize((texts[1].size[0] * 2, texts[1].size[1] * 2))
                                                              ,
                                                           texts[2]
-                                                         # .resize(
-                                                         #      (texts[2].size[0] * 2, texts[2].size[1] * 2))
+                                                          # .resize(
+                                                          #      (texts[2].size[0] * 2, texts[2].size[1] * 2))
                                                           ]) \
                     .resize(clip.size) \
                     .set_start(clip.start)
@@ -128,6 +132,11 @@ class VideoEdit:
                 continue
 
             self.clips.append(clip)
+
+    def loading_imit(self, video1, video2):
+        before1, before2 = video1.subclip(0, 3).fx(vfx.blink, .3, .3), video2.subclip(0, 3).fx(vfx.blink, .3, .3)
+        after1, after2 = video1.subclip(3).set_start(36), video2.subclip(3).set_start(36)
+        return [before1, before2, after1, after2]
 
     def compositing_videos(self, list_materials):
         return mvpy.CompositeVideoClip(list_materials)
@@ -174,13 +183,13 @@ class VideoEdit:
         :return: список разделённых по секторам клипов
         """
 
-        mini_clip_1_ofs = masked_with_offsets(videos[0].resize(regions[2].size).set_duration(11), speed_ofs=0.9,
+        mini_clip_1_ofs = masked_with_offsets(videos[0].resize(regions[2].size).set_duration(13), speed_ofs=.7,
                                               with_no_ofs=False)
         mini_clip_2_ofs = masked_with_offsets(videos[1].resize(regions[2].size),
                                               with_no_ofs=False)
         mini_clip_3_ofs = masked_with_offsets(videos[2].resize(regions[2].size).set_duration(10), with_no_ofs=False)
 
-        mini_clip_2 = masked_with_offsets(videos[1].resize(regions[2].size).set_duration(11))
+        mini_clip_2 = masked_with_offsets(videos[1].resize(regions[2].size).set_duration(13))
         mini_clip_3 = masked_with_offsets(videos[2].resize(regions[2].size).set_duration(10))
 
         return [c.resize(r.size)
@@ -190,24 +199,22 @@ class VideoEdit:
                     .set_start(c_st)
 
                 for c, r, (c_st, c_dur) in zip(
-                [mini_clip_1_ofs, mini_clip_2.fx(vfx.blink, .5, .5),
+                [mini_clip_1_ofs, mini_clip_2,
                  mini_clip_3, mini_clip_2_ofs,
                  mini_clip_3_ofs],
                 [regions[2], regions[1],
                  regions[2], regions[1],
                  regions[2]],
-                [(35, 11), (35, 11),
+                [(33, 13), (33, 13),
                  (46, 10), (46, 10),
                  (56, 10)]
             )]
 
-    def get_text(self, texts, mode, track=False):
+    def get_text(self, texts, track=False, *args, **kwargs):
         """
         Метод создаёт текстовый клип
         :param texts: Список строк текста для записи
             :type texts: list
-        :param mode: Признак сетки параметров для текстового клипа (из settings.TEXT_SCENARIOS)
-            :type mode: str
         :param track: Флаг для создания динамического текста. Параметры движения задаются в текстовом файле
         (см. settings.TEXT_SCENARIOS)
             :type track: bool
@@ -217,18 +224,12 @@ class VideoEdit:
         gettings_trajectory = None
         total_texts = []
         for num_text, label in enumerate(texts):
-            text = mvpy.TextClip(label,
-                                 font=t_sets['sets'][mode]['font'],
-                                 fontsize=t_sets['sets'][mode]['fontsize'],
-                                 color=t_sets['sets'][mode]['color'],
-                                 stroke_color=t_sets['sets'][mode]['bg_clr'],
-                                 kerning=t_sets['sets'][mode]['kerning']
-                                 )
+            text = mvpy.TextClip(label, **kwargs)
 
             if track:
 
                 if gettings_trajectory is None:
-                    traj = Trajectory.load_list(t_sets['sets'][mode]['tracking'])
+                    traj = Trajectory.load_list(t_sets['sets']['tracking'])
                     gettings_trajectory = traj[:len(texts)]
 
                 text = text.set_position(gettings_trajectory[num_text])

@@ -20,61 +20,29 @@ TEXT_SCENARIOS = {
     'loc2': "Vorobyovy\nHills",
 
     'sets':
-        {'text_1': {
+        {'titre': {
             'font': 'Amiri-regular',
             'fontsize': 20,
             'color': 'grey',
-            'bg_clr': 'grey',
-            'pos': ('center', 0.6),
-            # 'start': (0, 1),
-            # 'end': (0, 6.958),
-            'fadein': 0.3,
-            'fadeout': 0.3,
+            'stroke_color': 'grey',
             'kerning': 1,
 
-            'tracking': 'files/tracking/end_titre.txt'
         },
 
-            'text_2': {
+            'zoom_city': {
                 'font': 'AvantGarde-Bold',  # AvantGarde-Book
                 'fontsize': 1000,
                 'color': 'grey',
-                'bg_clr': 'gray35',
-                'pos': ('left', 0.6),
-                'start': (0, 6),
-                'end': (0, 9.999),
-                'fadeout': 0.2,
+                'stroke_color': 'gray35',
                 'kerning': 5,
             },
 
-            'text_3': {
-                'font': 'Amiri-regular',  # AvantGarde-Book
-                'fontsize': 20,
-                'color': 'grey',
-                'bg_clr': 'grey',
-                'pos': ('left', 0.6),
-                # 'start': (0, 6),
-                # 'end': (0, 9.999),
-                'fadein': 0.3,
-                'fadeout': 0.3,
-                'kerning': 1,
-
-                'tracking': 'files/tracking/end_titre.txt'
+            'loading': {
+                'font': 'Amiri-regular',
+                'fontsize': 30,
+                'color': 'white',
             },
 
-            'text_4': {
-                'font': 'Amiri-regular',  # AvantGarde-Book
-                'fontsize': 20,
-                'color': 'grey',
-                'bg_clr': 'grey',
-                'pos': ('left', 0.6),
-                # 'start': (0, 6),
-                # 'end': (0, 9.999),
-                'fadein': 0.3,
-                'fadeout': 0.3,
-                'kerning': 1,
-
-                'tracking': 'files/tracking/end_titre.txt'
-            },
+            'tracking': 'files/tracking/end_titre.txt'
         }
 }
