@@ -4,6 +4,7 @@ import numpy as np
 import moviepy.editor as mvpy
 from moviepy.video.tools.drawing import color_gradient
 from moviepy.video.tools.tracking import manual_tracking
+import moviepy.video.fx.all as vfx
 
 
 def mask_img(img1, flag=True):
@@ -109,3 +110,6 @@ def set_tracking():
                                '	' + str(i[2][0]) + '	' + str(i[2][1]) + '	' + str(i[2][2]) + '\n'
                                for i in zip(total_1, total_2, total_3)])
 
+
+def glitch_effect(video):
+    pass
