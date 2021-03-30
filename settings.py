@@ -25,7 +25,9 @@ VIDEO_SCENARIOS = {
 
 AUDIO_SCENARIOS = {
     'track': "media/load/sample_2.wav",
-    'load_effect': "media/load/load_sound.mp3"
+
+    'load_effect': "media/load/load_sound.mp3",
+    'label_effect': "media/load/sample_label.wav"
 }
 
 

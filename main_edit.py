@@ -51,8 +51,10 @@ class VideoEdit:
                                      target_resolution=size).subclip(*cut)
             masked_clip = vid.fx(vfx.mask_color, color=[0, 0, 0], thr=110, s=5)
 
-            yield masked_clip.set_pos(('center', 'center')).set_start(5 * idx) \
+            masked_clip = masked_clip.set_start(5 * idx) \
                 .set_opacity(0.3).crossfadein(1).crossfadeout(.3)
+
+            yield masked_clip.set_pos(('center', 'center')) if not idx == 4 else masked_clip.set_pos(('center', 520))
 
     def run(self):
         """
@@ -68,13 +70,14 @@ class VideoEdit:
                                    audio=False, target_resolution=(1080, 1920)).subclip(*self.cuts[0])
 
         effects_img = list(self.masked_effects_for_img(v_sets['effects_img_list'],
-                                                       size_list=[(680, 1100), (670, 1020), (580, 940), (720, 1100),
-                                                                  (580, 940), (800, 1300)],
+                                                       size_list=[(680, 1100), (480, 840),
+                                                                  (580, 940), (720, 1100),
+                                                                  (100, 300), (670, 1100)],
                                                        cuts_list=[('00:00:00.00', '00:00:04.30'),
                                                                   ('00:00:14.00', '00:00:18.30'),
                                                                   ('00:00:17.00', '00:00:21.30'),
                                                                   ('00:00:07.00', '00:00:11.30'),
-                                                                  ('00:00:32.00', '00:00:36.30'),
+                                                                  ('00:00:20.00', '00:00:24.30'),
                                                                   ('00:00:32.00', '00:00:36.30')
                                                                   ]))
 
@@ -97,11 +100,11 @@ class VideoEdit:
 
         compiling_clips = [text_clip_1
                                .set_duration(3)
-                               .set_position((1710, 80))
+                               .set_position((1705, 75))
                                .set_start(33),
                            text_clip_2
                                .set_duration(3)
-                               .set_position((1710, 230))
+                               .set_position((1705, 225))
                                .set_start(33),
                            *loading_effect,
                            *precompiling_clips[2:]]
@@ -127,8 +130,10 @@ class VideoEdit:
 
         self.audio.add_main_track(a_sets['track'])
         self.audio.add_effects(a_sets['load_effect'], (4, 68))
+        self.audio.add_effects(a_sets['label_effect'], (3, 75.2), vol=.6, vol_main=True)
+        self.audio.add_effects(a_sets['label_effect'], (3, 120), vol=.6, vol_main=True)
 
-        self.save_video(final_clip.set_audio(self.audio.main_track), self.save_title)
+        self.save_video(final_clip.set_audio(self.audio.get_track()), self.save_title)
 
         for v in self.clips:
             v.close()
