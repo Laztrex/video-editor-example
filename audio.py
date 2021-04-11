@@ -12,12 +12,16 @@ class AudioEditor:
     def add_effects(self, effects, times, vol=.3, vol_main=False):
         if vol_main and self.main_track:
             self.main_track = mvpy.concatenate_audioclips(
-                [self.main_track.subclip(t_end=times[1]),
-                 self.main_track.subclip(times[1], times[1] + times[0]).volumex(.8),
-                 self.main_track.subclip(times[1] + times[0])]
+                [self.main_track.subclip(t_end=times[1])
+                     .audio_fadeout(0.005),
+                 self.main_track.subclip(times[1], times[1] + times[0])
+                     .volumex(.7)
+                     .audio_fadein(0.005).audio_fadeout(0.005),
+                 self.main_track.subclip(times[1] + times[0])
+                     .audio_fadein(0.005)]
             )
         self.effects.append(
-            mvpy.AudioFileClip(effects).subclip(t_end=times[0]).set_start(times[1]).volumex(vol).audio_fadeout(.5)
+            mvpy.AudioFileClip(effects).subclip(t_end=times[0]).set_start(times[1]).volumex(vol).audio_fadeout(.3)
         )
 
     def merge(self, effect=None):

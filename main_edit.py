@@ -23,7 +23,7 @@ class VideoEdit:
 
     def __init__(self, input_videos, savetitle, cuts):
         self.clips = []
-        self.tfreezes = [mvpy.cvsecs(40.5), mvpy.cvsecs(85)]
+        self.tfreezes = [mvpy.cvsecs(40), mvpy.cvsecs(85)]
         self.input_videos = input_videos
         self.cuts = cuts
         self.save_title = savetitle
@@ -51,10 +51,11 @@ class VideoEdit:
                                      target_resolution=size).subclip(*cut)
             masked_clip = vid.fx(vfx.mask_color, color=[0, 0, 0], thr=110, s=5)
 
-            masked_clip = masked_clip.set_start(5 * idx) \
-                .set_opacity(0.3).crossfadein(1).crossfadeout(.3)
+            opacity, fdin, fdout = v_sets['effects'].get(vid_name, (.3, 1., .3))
+            masked_clip = masked_clip.set_start([[5 * idx - 3, 0][idx == 0], 2][idx == 1]) \
+                .set_opacity(opacity).crossfadein(fdin).crossfadeout(fdout)
 
-            yield masked_clip.set_pos(('center', 'center')) if not idx == 4 else masked_clip.set_pos(('center', 520))
+            yield masked_clip.set_pos(('center', 'center')) if not idx == 5 else masked_clip.set_pos(('center', 460))
 
     def run(self):
         """
@@ -62,18 +63,19 @@ class VideoEdit:
         """
 
         mask_im = self.get_regions('files/icon/window_img.png')[2]
+
         images_seq = self.spec_image_video_sequence(v_sets['img_list'],
                                                     mask=mask_im, img=True, duration=5)
-        video_seq = self.spec_image_video_sequence([self.input_videos[1]], mask=mask_im, cuts=self.cuts[1])
 
         first = mvpy.VideoFileClip(self.input_videos[0],
                                    audio=False, target_resolution=(1080, 1920)).subclip(*self.cuts[0])
 
-        effects_img = list(self.masked_effects_for_img(v_sets['effects_img_list'],
-                                                       size_list=[(680, 1100), (480, 840),
+        effects_img = list(self.masked_effects_for_img(['media/load/Loading Effect.mp4'] + v_sets['effects_img_list'],
+                                                       size_list=[(332, 572), (680, 1100), (480, 840),
                                                                   (580, 940), (720, 1100),
                                                                   (100, 300), (670, 1100)],
-                                                       cuts_list=[('00:00:00.00', '00:00:04.30'),
+                                                       cuts_list=[('00:00:02.00', '00:00:04.00'),
+                                                                  ('00:00:00.00', '00:00:04.30'),
                                                                   ('00:00:14.00', '00:00:18.30'),
                                                                   ('00:00:17.00', '00:00:21.30'),
                                                                   ('00:00:07.00', '00:00:11.30'),
@@ -83,7 +85,8 @@ class VideoEdit:
 
         self.clips.append(self.compositing_videos(
             [first,
-             mvpy.concatenate_videoclips((list(images_seq) + list(video_seq)))
+             mvpy.concatenate_videoclips(list(images_seq))
+                 .set_start(2)
                  .resize(.75)
                  .set_pos(('center', 'center')),
              *effects_img]
@@ -129,9 +132,9 @@ class VideoEdit:
         )
 
         self.audio.add_main_track(a_sets['track'])
-        self.audio.add_effects(a_sets['load_effect'], (4, 68))
-        self.audio.add_effects(a_sets['label_effect'], (3, 75.2), vol=.6, vol_main=True)
-        self.audio.add_effects(a_sets['label_effect'], (3, 120), vol=.6, vol_main=True)
+        self.audio.add_effects(a_sets['load_effect'], (4, 69))
+        self.audio.add_effects(a_sets['label_effect'], (2.5, 36 + self.tfreezes[0]), vol=.9, vol_main=True)
+        self.audio.add_effects(a_sets['label_effect'], (2.5, 36 + self.tfreezes[1]), vol=.9, vol_main=True)
 
         self.save_video(final_clip.set_audio(self.audio.get_track()), self.save_title)
 
@@ -139,7 +142,7 @@ class VideoEdit:
             v.close()
 
     def load_videos(self):
-        for idx, (movie, cut) in enumerate(zip(self.input_videos[2:], self.cuts[2:])):
+        for idx, (movie, cut) in enumerate(zip(self.input_videos[1:], self.cuts[1:])):
             clip = mvpy.VideoFileClip(movie, audio=False,
                                       target_resolution=(1080, 1920)).subclip(*cut)  # resize_algorithm='bicublin'
             if idx == 0:
@@ -162,7 +165,7 @@ class VideoEdit:
                                                           #      (texts[2].size[0] * 2, texts[2].size[1] * 2))
                                                           ]) \
                     .resize(clip.size) \
-                    .set_start(clip.start)\
+                    .set_start(clip.start) \
                     .fadeout(1)
                 self.clips += [clip, clip_with_text]
                 continue
@@ -313,7 +316,7 @@ class VideoEdit:
                              codec=v_sets['sets']['vcodec'],
                              preset=v_sets['sets']['compression'],
                              ffmpeg_params=["-c:a", "copy", "-c:v", "libx264", "-crf", "0"],
-                             remove_temp=True)
+                             remove_temp=True, audio_codec="aac")
 
 
 if __name__ == '__main__':
@@ -325,8 +328,7 @@ if __name__ == '__main__':
     title_save = v_sets['sets']['dir_save'] + 'IMG_0039'
     title = title_save + v_sets['sets']['save_ext']
 
-    timings = [('00:00:12.00', '00:00:47.00'),
-               ('00:00:20.00', '00:00:24.00'),
+    timings = [('00:00:11.00', '00:00:47.00'),
                ('00:00:00.00', '00:00:08.45'),
                ('00:00:00.00', '00:00:10.00'),
                ('00:00:00.00', '00:00:10.00'),
@@ -335,7 +337,7 @@ if __name__ == '__main__':
                ('00:00:01.00', '00:00:11.00'),
                ('00:00:40.00', '00:00:49.00'),
                ('00:00:00.00', '00:00:07.00'),
-               ('00:00:01.00', '00:00:13.10'),
+               ('00:00:01.00', '00:00:12.00'),
                ('00:00:02.00', '00:00:16.00')]
 
     editor = VideoEdit(input_videos=inputs,
