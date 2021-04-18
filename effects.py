@@ -6,6 +6,8 @@ from moviepy.video.tools.drawing import color_gradient
 from moviepy.video.tools.tracking import manual_tracking
 import moviepy.video.fx.all as vfx
 
+from gif_glitch import GlitchEffect
+
 
 def mask_img(img1, flag=True):
     """
@@ -111,5 +113,6 @@ def set_tracking():
                                for i in zip(total_1, total_2, total_3)])
 
 
-def glitch_effect(video):
-    pass
+def glitch_gif(src):
+    glitch = GlitchEffect(src_gif=src)
+    glitch.start()
