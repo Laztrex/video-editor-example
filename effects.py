@@ -113,6 +113,17 @@ def set_tracking():
                                for i in zip(total_1, total_2, total_3)])
 
 
-def glitch_gif(src):
-    glitch = GlitchEffect(src_gif=src)
-    glitch.start()
+def glitch_effect(video, mode='video', fps=None, opt=0, loop=0,
+               colors=None, verbose=True):
+    # temp_dir = os.path.join('temp', 'pre_gif.gif')
+    glitcher = GlitchEffect(src=video.subclip(t_start=3, t_end=5))
+    result = glitcher.start()
+
+    res_glitch_video = mvpy.concatenate_videoclips([video.subclip(t_end=3),
+                                                    getattr(glitcher, f'make_{mode}')(result),
+                                                    video.subclip(t_start=5)])
+    return res_glitch_video
+
+
+def matrix_effect():
+    pass
